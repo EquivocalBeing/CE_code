@@ -3,7 +3,7 @@ They are in the Jupyter Notebook format, so you'll need to download Anaconda to 
 
 Both of the codes are anotated with instructions on how to run the code. So, rtfm
 
-There are also basic example files that can be used to run the scripts.
+There are also some example files that can be used to run the scripts.
 
 ##############################################################################################################################################################################
 
