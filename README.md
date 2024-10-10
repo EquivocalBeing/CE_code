@@ -3,7 +3,8 @@ They are in the Jupyter Notebook format, so you'll need to download Anaconda to 
 
 Both of the codes are anotated with instructions on how to run the code. There is also basic example files that can be used to run the scripts.
 
-#################################################################################################################################################
+###############################################################################################################################
+
 For retrieving data from the WebDAQ, the data can be converted to csv inside the premade software.
 
 For the Minimus, data can be download from the storage page. However, it only saves it as a mseed file.
