@@ -2,7 +2,7 @@ There are three codes for use. Two are for seismological data analysis, while th
 
 
 There are two seis codes because one is for data from the Minimus and other is for data from the WebDAQ. The mag code is also for WebDAQ data.
-To run the codes, you need to download some additioal packages not installed in standard Python. There is instructions on how to do this and which packages to download in the code.
+To run the codes, you need to download some additioal packages not installed in standard Python. There are instructions on how to do this and which packages to download in the code.
 All three codes are annotated with how to use the code and some additional notes if there is confusion. So, be sure to rtfm.
 
 
