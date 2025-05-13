@@ -6,4 +6,4 @@ To run the codes, you need to download some additioal packages not installed in 
 All three codes are annotated with how to use the code and some additional notes if there is confusion. So, be sure to rtfm.
 
 
-Additionally, there are LIGO data files. These are so you can compare the field data to what is recorded at ligo.
+Additionally, there are LIGO data files. These are so you can compare the field data to what is recorded at ligo. You will need to put these data files in the same directory as the code(s). The code should run with and without the data files downloaded.
