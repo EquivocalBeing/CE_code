@@ -11,3 +11,5 @@ All three codes are annotated with how to use the code and some additional notes
 Additionally, there are LIGO data files. These are so you can compare the field data to what is recorded at ligo. You will need to put these data files in the same directory as the code(s). The code should run with and without the data files downloaded.
 
 ------------------------------------------------------------------------------------------------------
+
+To install the packages, you will need to either use pip install or *conda install conda-forge::*
