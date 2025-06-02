@@ -12,4 +12,4 @@ Additionally, there are LIGO data files. These are so you can compare the field 
 
 ------------------------------------------------------------------------------------------------------
 
-To install the packages, you will need to either use pip install or *conda install conda-forge::*
+To install the packages, you will need to either use **pip install** or **conda install conda-forge::**
