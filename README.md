@@ -12,4 +12,5 @@ Additionally, there are LIGO data files. These are so you can compare the field 
 
 ------------------------------------------------------------------------------------------------------
 
-To install the packages, you will need to either use **pip install** or ***conda install conda-forge::***
+To install the packages, you will need to either use **pip install** or **conda install conda-forge::**. There is a terminal (Qt Console) built into anaconda navigator, this is where you will want to download the packages.
+After downloading the packages, go to **Environments** and check that the packages are installed. If they are not appearing, you will need to select **Update Index**. You will then need to select the package(s) and install them, this may take a bit. 
