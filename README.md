@@ -1,4 +1,4 @@
-# rtfm
+# Read Me
 
 There are three codes for use. Two are for seismological data analysis, while the other is for electromagnetic analysis.
 
