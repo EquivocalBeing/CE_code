@@ -800,7 +800,7 @@ def plot_spectrum(sr, x, y, z, ligo_freq, ligo_sr, ligo_x, ligo_y, ligo_z, funct
     warnings.simplefilter('ignore')
     
     
-    def asd(data_z, data_n, data_e, sample_rate, lf, lx, ly, lz, bart_sample_rate, bart_x, bart_y, bart_z,
+    def asd(data_z, data_n, data_e, sample_rate, lf, lx, ly, lz, bart_sample_rate, bart_x, bart_y, bart_z, frequency, 
             over_lap, fft, signal_prom, ymin, ymax, xmin, xmax, func, channel):
 
 #----------# If you don't want to look at the whole time series, you can add '1' to the variables, i.e z1, y1, x1 #------------#
@@ -966,56 +966,83 @@ def plot_spectrum(sr, x, y, z, ligo_freq, ligo_sr, ligo_x, ligo_y, ligo_z, funct
         asd(z, y, x, sr, None, None, None, None, None, None, None, None,
             overlap, fft_length, prom, my_min, my_max, x_min, x_max, "displacement", "all")
 
+################################################################################################################################
 #------------------------------------------------------------------------------------------------------------------------------#
-#------------------------------------------------------------------------------------------------------------------------------#
+################################################################################################################################
     
     while True:
         # In Jupyter the place of the input line is not consistent. So, sometimes it is printed out before the option list.
         # To fix this, the option list was placed into the input line, so that everything is alway together.
         
         # This is what the printed out option list will look like
-        '''print("\n\n---------------------------------------")
-        print("-- ASD Spectra Options --")
-        print("1: Compare to LIGO Hanford Data")
-        print("2: Change plot limits / FFT Parameters")
-        print("x: Return to main menu")
-        print("---------------------------------------")'''
+        '''---------------------------------------
+           -- ASD Spectra Options --
+           1: Compare to LIGO Hanford Data
+           2: Change plot limits / FFT Parameters
+           x: Return to main menu")
+           ---------------------------------------
 
-        sub_choice = input("\n\n---------------------------------------\n-- ASD Spectra Options --\n1: Compare to LIGO Hanford Data\n2: Change plot limits / FFT Parameters\nx: Return to main menu\n---------------------------------------\n\nEnter your choice (1-3): ")
-        
+           Enter your choice (1-2, x): '''
+        if function == "seis":
+            sub_choice = input("\n\n---------------------------------------\n-- ASD Spectra Options --\n1: Compare to LIGO Hanford Data\n2: Change plot limits / FFT Parameters\nx: Return to main menu\n---------------------------------------\n\nEnter your choice (1-2, x): ")
+
+            # The magnetometer analysis has a function that the seismometer doesn't.
+            # This if statement adds in this third option
+            '''---------------------------------------
+            -- ASD Spectra Options --
+            1: Compare to LIGO Hanford Data
+            2: Change plot limits / FFT Parameters
+            3: Look at a specific frequency
+            x: Return to main menu")
+            ---------------------------------------
+
+            Enter your choice (1-3, x): '''
+
+        elif function == "mag":
+            sub_choice = input("\n\n---------------------------------------\n-- ASD Spectra Options --\n1: Compare to LIGO Hanford Data\n2: Change plot limits / FFT Parameters\n3: Look at a specific frequency\nx: Return to main menu\n---------------------------------------\n\nEnter your choice (1-3, x): ")
+
+
         if sub_choice == "1":
             
             if function == "seis":
             
                 ## E Channel
-                asd(None, None, x, sr, ligo_freq, ligo_x, ligo_y, ligo_z, None, None, None, None,
-                    overlap, fft_length, prom, y_min, y_max, x_min, x_max, "velocity", "east")
+                if ligo_freq is not None:
+                    asd(None, None, x, sr, ligo_freq, ligo_x, ligo_y, ligo_z, None, None, None, None,
+                        overlap, fft_length, prom, y_min, y_max, x_min, x_max, "velocity", "east")
+
+                elif ligo_freq is None:
+                    print("LIGO data not found")
 
                 ## N Channel
-                asd(None, y, None, sr, ligo_x, ligo_y, ligo_z, None, None, None, None,
-                    overlap, fft_length, prom, y_min, y_max, x_min, x_max, "velocity", "north")
+                if ligo_freq is not None:
+                    asd(None, y, None, sr, ligo_x, ligo_y, ligo_z, None, None, None, None,
+                        overlap, fft_length, prom, y_min, y_max, x_min, x_max, "velocity", "north")
 
                 ## Z Channel
-                
-                asd(z, None, None, sr, ligo_x, ligo_y, ligo_z, None, None, None, None,
-                    overlap, fft_length, prom, y_min, y_max, x_min, x_max, "velocity", "zed")
+                if ligo_freq is not None:
+                    asd(z, None, None, sr, ligo_x, ligo_y, ligo_z, None, None, None, None,
+                        overlap, fft_length, prom, y_min, y_max, x_min, x_max, "velocity", "zed")
                 
             elif function == "mag":
                 
                 ## -------------------------------- E Channel ---------------------------------- ##
-                
-                asd(None, None, x, sr, None, None, None, None, ligo_sr, ligo_x, None, None,
-                    overlap, fft_length, prom, y_min, y_max, x_min, x_max, "velocity", "east")
+                if ligo_sr is not None:
+                    asd(None, None, x, sr, None, None, None, None, ligo_sr, ligo_x, None, None,
+                        overlap, fft_length, prom, y_min, y_max, x_min, x_max, "velocity", "east")
+                    
+                elif ligo_sr is None:
+                    print("LIGO data not found")
 
                 ## -------------------------------- N Channel ---------------------------------- ##
-                
-                asd(None, y, None, sr, None, None, None, None, ligo_sr, None, ligo_y, None,
-                    overlap, fft_length, prom, y_min, y_max, x_min, x_max, "velocity", "north")
+                if ligo_sr is not None:
+                    asd(None, y, None, sr, None, None, None, None, ligo_sr, None, ligo_y, None,
+                        overlap, fft_length, prom, y_min, y_max, x_min, x_max, "velocity", "north")
 
                 ## -------------------------------- Z Channel ---------------------------------- ##
-
-                asd(z, None, None, sr, None, None, None, None, ligo_sr, None, None, ligo_z,
-                    overlap, fft_length, prom, y_min, y_max, x_min, x_max, "velocity", "zed")
+                if ligo_sr is not None:
+                    asd(z, None, None, sr, None, None, None, None, ligo_sr, None, None, ligo_z,
+                        overlap, fft_length, prom, y_min, y_max, x_min, x_max, "velocity", "zed")
         
 #------------------------------------------------------------------------------------------------------------------------------#            
 
@@ -1070,19 +1097,23 @@ def plot_spectrum(sr, x, y, z, ligo_freq, ligo_sr, ligo_x, ligo_y, ligo_z, funct
                 
 #----------------------------------------------------- Plots Velocity ---------------------------------------------------------#
     
-            asd(z, y, x, sr, None, None, None, None, None, None, None, None,
+            asd(z, y, x, sr, None, None, None, None, None, None, None, None, None, 
                 overlap, fft_length, prom, y_min, y_max, x_min, x_max, "velocity", "all")
 
 
 #---------------------------------------------------- Plots Displacement ------------------------------------------------------#
             if function == "seis":
-                asd(z, y, x, sr, None, None, None, None, None, None, None, None, 
+                asd(z, y, x, sr, None, None, None, None, None, None, None, None, None, 
                     overlap, fft_length, prom, my_min, my_max, x_min, x_max, "displacement", "all")
 
 #------------------------------------------------------------------------------------------------------------------------------#
 #------------------------------------------------------------------------------------------------------------------------------#
-    
-        elif sub_choice == "x" or sub_choice == "" or sub_choice == "3":
+        elif sub_choice == "3":
+            if function == "mag":
+                freq = input("")
+
+
+        elif sub_choice == "x" or sub_choice == "":
             print("\nReturning to main menu...")
             break
         else:
