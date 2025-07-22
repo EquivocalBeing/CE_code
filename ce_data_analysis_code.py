@@ -1,4 +1,12 @@
-print("thinking...")
+'''
+Sorry in advanced to whoever is trying to maintain or update this code
+
+Good luck and sorry for any potential headache. o7
+
+- Carlos A. Campos
+'''
+
+print("thinking...")  ## To periodical let the user the code is still running and hasn't hit a runtime error
 import obspy
 from obspy import UTCDateTime
 import tkinter as tk
@@ -10,7 +18,7 @@ from matplotlib import pyplot as plt
 from scipy import signal
 from matplotlib import gridspec
 print("thinking...")
-import warnings
+import warnings  ## If warnings are still being printed out, just move the ignore line below whatever is causing the warning(s)
 import os
 
 
@@ -29,7 +37,7 @@ import os
     
 file_path_global = None
 
-def csv_upload(function):
+def csv_upload(function):  ## Function to upload CSV files from the WebDAQ
     
     print("\n------------------------------ A GUI icon shoud've appear in your task bar ------------------------------")
     print("---------------------- Select that to pick the data file you would like to analyze ----------------------\n")
@@ -39,24 +47,23 @@ def csv_upload(function):
     def upload_file():
         global file_path_global ## makes variable global 
 
+        ## file selection 
+        file_path_global = filedialog.askopenfilename(title="Select a file", filetypes=[("CSV Files", "*.csv")])  
 
-        file_path_global = filedialog.askopenfilename(title="Select a file", filetypes=[("CSV Files", "*.csv")])
-
-        print(f"\nFile selected: {file_path_global}")
+        print(f"\nFile selected: {file_path_global}") ## Prints out slected file as sanity check
         print("\n---------------------------------------Close the GUI program window---------------------------------------")
 
-    root = tk.Tk() ## Create the program window
-    root.title("Multi File Uploader")
+    root = tk.Tk() ## Creates the GUI program window 
+    root.title("File Uploader")
 
-    upload_button = tk.Button(root, text="Upload Sensor Data", command=upload_file) ## Create buttons for uploading files
+    upload_button = tk.Button(root, text="Upload Sensor Data", command=upload_file) ## Create button txt 
     upload_button.pack(pady=15)
 
-    root.mainloop() ## Runs the application
+    root.mainloop() ## Runs the GUI
     
     print("thinking...")
 
-#------------------------------------------------- Selects info from metadata -------------------------------------------------#
-
+    ## Selects info from metadata 
     metadata_rows = []
     metadata = {}
 
@@ -69,11 +76,10 @@ def csv_upload(function):
             key, value = row.split(':', 1)
             metadata[key.strip()] = value.strip()
 
-
 #-----------------------------------------# This is the sample rate from the metadata #----------------------------------------#
 
     sample_rate = float(metadata["Sample Rate"])
-    print("\nSample Rate: " + metadata["Sample Rate"]) #------------ Prints out the sample rate as a sanity check -------------#
+    print("\nSample Rate: " + metadata["Sample Rate"]) ## Prints out the sample rate as a sanity check
 
 #------------------------------------------------------------------------------------------------------------------------------#
 
@@ -83,7 +89,7 @@ def csv_upload(function):
         columns = ["Sample", "Time (s)", "Noise (V)", "Voltage X (V)", "Voltage Y (V)", "Voltage Z (V)", "blank"]
         calibration = (1.222e-05)/21
         ctrl_calibration = (1.222e-05)/21
-        control_file = 'mag_data.csv'
+        control_file = 'mag_data.csv'  ## If the ctrl/LIGO file is changed, put the new file name here
         
     elif function == "seis":
         columns = ["Sample", "Time (s)", "Noise (V)", "Channel E (V)", "Channel N (V)", "Channel Z (V)", "blank"]
@@ -92,7 +98,7 @@ def csv_upload(function):
         control_file = 'ligo_seis_data.txt'
         
     else:
-        print("oops")
+        print("oops") 
     
 #------------------------------------------------------------------------------------------------------------------------------#
     
@@ -101,7 +107,8 @@ def csv_upload(function):
     data.columns = columns
 
     time   = data[columns[1]]
-    noise  = data[columns[2]] * calibration
+    #noise  = data[columns[2]] * calibration  ## The noise channel can be added into the other plots
+                                              ## However, it is not regularly looked at, that is why it is commented out
     x_axis = data[columns[3]] * calibration # east
     y_axis = data[columns[4]] * calibration # north    
     z_axis = data[columns[5]] * calibration
@@ -110,8 +117,8 @@ def csv_upload(function):
 
     print("thinking...")
     
-    script_dir = os.getcwd()
-    control_data_path = os.path.join(script_dir, control_file)
+    script_dir = os.getcwd()                                    ## Python searches thru the comp's OS
+    control_data_path = os.path.join(script_dir, control_file)  ## to find the respective ctrl file
     if os.path.exists(control_data_path):
         
 
@@ -156,9 +163,11 @@ def csv_upload(function):
 '''##########################################################################################################################'''
 '''##########################################################################################################################'''
 
-def mseed_upload(function):
+file_paths_global = []
+
+def mseed_upload():  ## function to upload miniseed files from the Minimus
     
-    def get_valid_datetime(prompt):
+    def get_valid_datetime(prompt):  ## checks to make sure the user inputted a valid time
         while True:
             date_input = input(prompt)
             try:
@@ -170,8 +179,7 @@ def mseed_upload(function):
     print("\n------------------------------ A GUI icon shoud've appear in your task bar ------------------------------")
     print("---------------------- Select that to pick the data file you would like to analyze ----------------------\n")
 
-    
-    def upload_files():
+    def upload_files(): ## Function for GUI
         global file_paths_global 
 
         file_paths_global = filedialog.askopenfilenames(title="Select files", filetypes=[("All Files", "*.*")])
@@ -184,21 +192,29 @@ def mseed_upload(function):
             print("No files selected.")
 
 
-    root = tk.Tk() ## Create the program window
+    root = tk.Tk()
     root.title("Multi File Uploader")
 
-    upload_button = tk.Button(root, text="Upload Files", command=upload_files) ## Create buttons for uploading files
-    upload_button.pack(pady=10)
+    upload_button = tk.Button(root, text="Upload mseed flie", command=upload_files)
+    upload_button.pack(pady=15)
 
     root.mainloop() ## Runs the application 
 
     paths = sorted(file_paths_global) ## sorts paths alphabetically and saves it to a variable   
     
-    print("Enter the start and end times wish to look at")
-    print("2020-01-01T00:00:00 This is the format it should be in")
+    alpha = obspy.read(file_paths_global[0])
+    beta = obspy.read(file_paths_global[1])
+    gamma = obspy.read(file_paths_global[2])
 
-    start_time = get_valid_datetime("Start date and time: ")
-    end_time = get_valid_datetime("End date and time: ")
+    print("File 1: Start time: " + str(alpha[0].stats.starttime) + " End time:" + str(alpha[0].stats.endtime) )
+    print("File 2: Start time: " + str(beta[0].stats.starttime) + " End time:" + str(beta[0].stats.endtime) )
+    print("File 3: Start time: " + str(gamma[0].stats.starttime) + " End time:" + str(gamma[0].stats.endtime) )
+
+    print("\nEnter the start and end times wish to look at")
+    print("\n2020-01-01T00:00:00\n\nThis is the format it should be in")
+
+    start = get_valid_datetime("Start date and time: ")
+    end = get_valid_datetime("End date and time: ")
     
     start_time = UTCDateTime(start)
     end_time = UTCDateTime(end)  
@@ -240,7 +256,7 @@ def mseed_upload(function):
                 data_values.append(trace.data)
 
             sample_rates_all.append(sample_rates)
-            times_all.append(times)               ## Append the current file's trace data to the overall lists
+            times_all.append(times)                ## Append the current file's trace data to the overall lists
             data_values_all.append(data_values)
 
 #----------------------------------------------- Assigns variables for each file ----------------------------------------------#
@@ -249,18 +265,18 @@ def mseed_upload(function):
         times_e, times_n, times_z = times_all
         data_e, data_n, data_z = data_values_all
 
-        return data_e, data_n, data_z, times_e, times_n, times_z, sample_rates1
+        return data_e, data_n, data_z, times_e, times_n, times_z, sample_rates1  ## The sample rates are the same
 
 #-------------------------------------------------------- Runs function -------------------------------------------------------#
 
-    data_e, data_n, data_z, times_e, times_n, times_z, sr = process_multiple_miniseed(paths, start_time=start_time, 
-                                                                                      end_time=end_time)
+    data_e, data_n, data_z, times_e, times_n, times_z, sr = process_multiple_miniseed(paths, start_time = start_time, 
+                                                                                      end_time = end_time)
     
     time_e = times_e[0]
-    time_n = times_e[0]
+    time_n = times_n[0]
     time_z = times_z[0]
     
-    z = data_z[0] * 0.0015e-6 #------------------- This the conversion factor for turning the data into m/s ------------------------#
+    z = data_z[0] * 0.0015e-6 ## This the conversion factor for turning the data into m/s 
     n = data_n[0] * 0.0015e-6 
     e = data_e[0] * 0.0015e-6
 
@@ -288,7 +304,7 @@ def mseed_upload(function):
     else:
         print("LIGO data not found\n")
     
-    return z, n, e, times_e, times_n, times_z, sr, hf, hx, hy, hz
+    return e, n, z, time_e, time_n, time_z, sr, hf, hx, hy, hz
 
     
 '''##########################################################################################################################'''
@@ -306,9 +322,24 @@ def mseed_upload(function):
 
 def get_optional_float(prompt, func, ID, sensor, time,  allow_back=True):
 
+
+    '''
+    This is a function to make sure that the code doesn't crash if the user(s)
+    inputs a value or string that will cause an error.
+
+    If the user inputs one of these values, the function will tell them the
+    input is invalid and what is allowed
+
+    Each function has it's own set of paramaters. These parameter return 
+    different values depending on the user input and sensor selected
+    '''
+
+
     while True:
         user_input = input(prompt).strip().lower()
-        
+
+        if sensor == "mini":
+            sensor = "seis"
     
 ################################################################################################################################
 #------------------------------------------------------------------------------------------------------------------------------#
@@ -606,8 +637,7 @@ def get_optional_float(prompt, func, ID, sensor, time,  allow_back=True):
 
             else:
                 print("Carlos didn't do his job properly")
-    
-    
+      
 
 '''##########################################################################################################################'''    
 '''##########################################################################################################################'''
@@ -631,33 +661,50 @@ def plot_time_series(time, x, y, z, function):
             title = "Seismic"
             labels = ['E', 'N', 'Z']
             y_label = "Amplitude (m/s)"
+
+            t1 = t
+            t2 = t
+            t3 = t
             
         elif function == "mag":
             title = "Magnetic"
             labels = ['X', 'Y', 'Z']
             y_label = "Amplitude [T]"
-        
+
+            t1 = t
+            t2 = t
+            t3 = t
+
+        elif function == "mini":
+            title = "Seismic"
+            labels = ['E', 'N', 'Z']
+            y_label = "Amplitude (m/s)"
+
+            t1 = t[0]
+            t2 = t[1]
+            t3 = t[2]
+
         plt.figure(figsize = (19, 11))
         ax = plt.gca()
         ax.yaxis.get_offset_text().set_fontsize(16)
             
-        if channels == "1":
+        if channels == "1": ## All Axises
             plt.title(title + " Data Time Series", fontweight = 'bold', fontsize = 25)
-            plt.plot(t, zed, linewidth = 1.5, color = 'black', label = labels[2]) 
-            plt.plot(t, north, linewidth = 1.5, color = 'red', label = labels[1])
-            plt.plot(t, east, linewidth = 1.5, color = 'mediumblue', label = labels[0])
+            plt.plot(t3, zed, linewidth = 1.5, color = 'black', label = labels[2]) 
+            plt.plot(t2, north, linewidth = 1.5, color = 'red', label = labels[1])
+            plt.plot(t1, east, linewidth = 1.5, color = 'mediumblue', label = labels[0])
 
-        elif channels == "2":
+        elif channels == "2": ## X Axis
             plt.title(title + " Channel: " + labels[0], fontweight = 'bold', fontsize = 25)
-            plt.plot(t, east, linewidth = 1.5, color = 'mediumblue', label = labels[0])
+            plt.plot(t1, east, linewidth = 1.5, color = 'mediumblue', label = labels[0])
 
-        elif channels == "3":
+        elif channels == "3": ## Y Axis
             plt.title(title + " Channel: " + labels[1], fontweight = 'bold', fontsize = 25)
-            plt.plot(t, north, linewidth = 1.5, color = 'red', label = labels[1])
+            plt.plot(t2, north, linewidth = 1.5, color = 'red', label = labels[1])
 
-        elif channels == "4":
+        elif channels == "4": ## Z Axis
             plt.title(title + " Channel: " + labels[2], fontweight = 'bold', fontsize = 25)
-            plt.plot(t, zed, linewidth = 1.5, color = 'black', label = labels[2])
+            plt.plot(t3, zed, linewidth = 1.5, color = 'black', label = labels[2])
 
         plt.legend(loc = "upper right", fontsize = 18)
         plt.xlabel("Time (s)", fontweight = "bold", fontsize = 20)
@@ -681,6 +728,7 @@ def plot_time_series(time, x, y, z, function):
     
     elif function == "seis":
         time_series("1", time, z, y, x, x_max, x_min, None, None, function)
+
 
 ################################################################################################################################
 #------------------------------------------------------------------------------------------------------------------------------#
@@ -1093,6 +1141,8 @@ def plot_spectrum(time, sr, x, y, z, ligo_freq, ligo_sr, ligo_x, ligo_y, ligo_z,
         elif function == "mag":
             sub_choice = input("\n\n---------------------------------------\n-- ASD Spectra Options --\n1: Compare to LIGO Hanford Data\n2: Change plot limits / FFT Parameters\n3: Look at a specific point in the time series\n4: Look at a specific frequency\nx: Return to main menu\n---------------------------------------\n\nEnter your choice (1-4, x): ")
 
+################################################################################################################################
+#------------------------------------------------------------------------------------------------------------------------------# 
 
         if sub_choice == "1":
             
@@ -1287,7 +1337,7 @@ def plot_spectrum(time, sr, x, y, z, ligo_freq, ligo_sr, ligo_x, ligo_y, ligo_z,
 
 
 
-def plot_spectrogram(sr,x, y, z, function):
+def plot_spectrogram(sr, x, y, z, function):
     print("\nPlotting Spectrogram...\n\nThis may take a while")
 
 ################################################################################################################################ 
@@ -1607,7 +1657,45 @@ def main_menu():
                             print("\nInvalid input. Try again.")
                     
                 elif sub_choice == "2":
-                    print("Not yet")
+
+                    function = "mini"
+
+                  # e, n, z
+                    x, y, z, time_x, time_y, time_z, sr, ligo_x, ligo_y, ligo_z, ligo_freq = mseed_upload()
+                    
+                  #         t1,     t2,     t3
+                    time = [time_x, time_y, time_z]
+
+                    while True:
+                        print("\n---------------------------------------")
+                        print("    === Seismometer Analysis Menu ===")
+                        print("1: Plot Time Series")
+                        print("2: Plot FFT Spectrum")
+                        print("3: Plot Spectrogram")
+                        print("x: Return to main menu")
+                        print("-----------------------------------------")
+
+                        sub_choice = input("\nEnter your choice (1-3, x): ").strip().lower()
+
+                        if sub_choice == "1":
+                            plot_time_series(time, x, y, z, function)
+
+                        elif sub_choice == "2":
+                            if ligo_freq is None:
+                                plot_spectrum(time, sr, x, y, z, None, None, None, None, function)
+
+                            else:
+                                plot_spectrum(time, sr, x, y, z, ligo_freq, None, ligo_x, ligo_y, ligo_z, function)
+
+                        elif sub_choice == "3":
+                            plot_spectrogram(sr, x, y, z, function)
+
+                        elif sub_choice == "x" or sub_choice == "":
+                            print("\nReturning to main menu...")
+                            break
+
+                        else:
+                            print("\nInvalid input. Try again.")
 
                 elif sub_choice == "x" or sub_choice == "":
                     print("\nReturning to main menu...")
