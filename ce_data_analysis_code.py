@@ -187,7 +187,7 @@ def mseed_upload():  ## function to upload miniseed files from the Minimus
         if file_paths_global:
             for file_path in file_paths_global:
                 print(f"File selected: {file_path}") 
-            print("\nclose the program window")
+            print("\n---------------------------------------Close the GUI program window---------------------------------------")
         else:
             print("No files selected.")
 
@@ -206,12 +206,12 @@ def mseed_upload():  ## function to upload miniseed files from the Minimus
     beta = obspy.read(file_paths_global[1])
     gamma = obspy.read(file_paths_global[2])
 
-    print("File 1: Start time: " + str(alpha[0].stats.starttime) + " End time:" + str(alpha[0].stats.endtime) )
-    print("File 2: Start time: " + str(beta[0].stats.starttime) + " End time:" + str(beta[0].stats.endtime) )
-    print("File 3: Start time: " + str(gamma[0].stats.starttime) + " End time:" + str(gamma[0].stats.endtime) )
+    #print("File 1: Start time: " + str(alpha[0].stats.starttime) + " End time:" + str(alpha[0].stats.endtime) )
+    #print("File 2: Start time: " + str(beta[0].stats.starttime) + " End time:" + str(beta[0].stats.endtime) )
+    #print("File 3: Start time: " + str(gamma[0].stats.starttime) + " End time:" + str(gamma[0].stats.endtime) )
 
     print("\nEnter the start and end times wish to look at")
-    print("\n2020-01-01T00:00:00\n\nThis is the format it should be in")
+    print("\nThe format should be like this:\n\n2020-01-01T00:00:00")
 
     start = get_valid_datetime("Start date and time: ")
     end = get_valid_datetime("End date and time: ")
@@ -283,7 +283,7 @@ def mseed_upload():  ## function to upload miniseed files from the Minimus
 
 #-----------------------------------------# This is the sample rate from the metadata #----------------------------------------#
 
-    sr =  sample_rates1[0]
+    sr =  sr[0]
     print("\nSample rate: " + str(sr))
 
 #------------------------------------------------------------------------------------------------------------------------------#
@@ -304,7 +304,7 @@ def mseed_upload():  ## function to upload miniseed files from the Minimus
     else:
         print("LIGO data not found\n")
     
-    return e, n, z, time_e, time_n, time_z, sr, hf, hx, hy, hz
+    return e, n, z, time_e, time_n, time_z, sr, hx, hy, hz, hf
 
     
 '''##########################################################################################################################'''
@@ -655,7 +655,7 @@ def get_optional_float(prompt, func, ID, sensor, time,  allow_back=True):
 def plot_time_series(time, x, y, z, function):
     #print("Running time series plot...")
     
-    def time_series(channels,t, zed, north, east, xmax, xmin, ymax, ymin, function):
+    def time_series(channels, t, zed, north, east, xmax, xmin, ymax, ymin, function):
         
         if function == "seis":
             title = "Seismic"
@@ -719,14 +719,14 @@ def plot_time_series(time, x, y, z, function):
         plt.show()
 
     x_min = 0
-    x_max = time[len(time) - 1]
+    x_max = time[0][len(time[0]) - 1]
     
     if function == "mag":
         time_series("2", time, z, y, x, x_max, x_min, None, None, function)
         time_series("3", time, z, y, x, x_max, x_min, None, None, function)
         time_series("4", time, z, y, x, x_max, x_min, None, None, function)
     
-    elif function == "seis":
+    elif function == "seis" or function == "mini":
         time_series("1", time, z, y, x, x_max, x_min, None, None, function)
 
 
@@ -793,7 +793,7 @@ def plot_time_series(time, x, y, z, function):
                         time_series("3", time, z, y, x, x_max, x_min, y_max, y_min, function)
                         time_series("4", time, z, y, x, x_max, x_min, y_max, y_min, function)
 
-                    elif function == "seis":
+                    elif function == "seis" or function == "mini":
                         time_series(channel, time, z, y, x, x_max, x_min, y_max, y_min, function)
                     
 
@@ -1067,7 +1067,7 @@ def plot_spectrum(time, sr, x, y, z, ligo_freq, ligo_sr, ligo_x, ligo_y, ligo_z,
         plt.legend(loc = "lower left", fontsize = 14.5, ncol = 2)
 
         plt.title('FFT: ' + str(fft) + "s", fontsize = 20, loc = "left",style ='italic')
-        plt.title("Overlap: " + str(overlap) + "%", fontsize = 20, loc = "right",style ='italic')
+        plt.title("Overlap: " + str(over_lap) + "%", fontsize = 20, loc = "right",style ='italic')
 
         plt.title(title, fontweight = 'bold', fontsize = 25)
 
@@ -1117,13 +1117,13 @@ def plot_spectrum(time, sr, x, y, z, ligo_freq, ligo_sr, ligo_x, ligo_y, ligo_z,
            -- ASD Spectra Options --
            1: Compare to LIGO Hanford Data
            2: Change plot limits / FFT Parameters
-           3: Look at a specific point in the time series
+           3: Look at specific times in the time series
            x: Return to main menu")
            ---------------------------------------
 
            Enter your choice (1-2, x): '''
         if function == "seis":
-            sub_choice = input("\n\n---------------------------------------\n-- ASD Spectra Options --\n1: Compare to LIGO Hanford Data\n2: Change plot limits / FFT Parameters\n3: Look at a specific point in the time series\nx: Return to main menu\n---------------------------------------\n\nEnter your choice (1-3, x): ")
+            sub_choice = input("\n\n---------------------------------------\n-- ASD Spectra Options --\n1: Compare to LIGO Hanford Data\n2: Change plot limits / FFT Parameters\n3: Look at specific times in the time series\nx: Return to main menu\n---------------------------------------\n\nEnter your choice (1-3, x): ")
 
             # The magnetometer analysis has a function that the seismometer doesn't.
             # This if statement adds in this third option
@@ -1131,7 +1131,7 @@ def plot_spectrum(time, sr, x, y, z, ligo_freq, ligo_sr, ligo_x, ligo_y, ligo_z,
                -- ASD Spectra Options --
                1: Compare to LIGO Hanford Data
                2: Change plot limits / FFT Parameters
-               3: Look at a specific point in the time series
+               3: Look at specific times in the time series
                4: Look at a specific frequency 
                x: Return to main menu")
                ---------------------------------------
@@ -1139,7 +1139,7 @@ def plot_spectrum(time, sr, x, y, z, ligo_freq, ligo_sr, ligo_x, ligo_y, ligo_z,
                Enter your choice (1-4, x): '''
 
         elif function == "mag":
-            sub_choice = input("\n\n---------------------------------------\n-- ASD Spectra Options --\n1: Compare to LIGO Hanford Data\n2: Change plot limits / FFT Parameters\n3: Look at a specific point in the time series\n4: Look at a specific frequency\nx: Return to main menu\n---------------------------------------\n\nEnter your choice (1-4, x): ")
+            sub_choice = input("\n\n---------------------------------------\n-- ASD Spectra Options --\n1: Compare to LIGO Hanford Data\n2: Change plot limits / FFT Parameters\n3: Look at specific times in the time series\n4: Look at a specific frequency\nx: Return to main menu\n---------------------------------------\n\nEnter your choice (1-4, x): ")
 
 ################################################################################################################################
 #------------------------------------------------------------------------------------------------------------------------------# 
@@ -1617,7 +1617,7 @@ def main_menu():
                 print("x: Return to main menu")
                 print("-----------------------------------------")
                 
-                sub_choice = input("\nEnter your choice (1-4): ").strip().lower()
+                sub_choice = input("\nEnter your choice (1-2, x): ").strip().lower()
 
                 if sub_choice == "1":
                     
@@ -1681,13 +1681,16 @@ def main_menu():
                             plot_time_series(time, x, y, z, function)
 
                         elif sub_choice == "2":
+                            function = "seis"
                             if ligo_freq is None:
                                 plot_spectrum(time, sr, x, y, z, None, None, None, None, function)
+                                print("LIGO data not found")
 
                             else:
                                 plot_spectrum(time, sr, x, y, z, ligo_freq, None, ligo_x, ligo_y, ligo_z, function)
 
                         elif sub_choice == "3":
+                            function = "seis"
                             plot_spectrogram(sr, x, y, z, function)
 
                         elif sub_choice == "x" or sub_choice == "":
