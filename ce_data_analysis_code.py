@@ -169,13 +169,17 @@ def mseed_upload():  ## function to upload miniseed files from the Minimus
     
     def get_valid_datetime(prompt):  ## checks to make sure the user inputted a valid time
         while True:
-            date_input = input(prompt)
+            date_input = input(prompt).strip().lower()
+            if date_input == "" or date_input == "" or date_input == "none":
+                return None
             try:
                 return UTCDateTime(date_input)
             except Exception as e:
                 print(f"Invalid date/time format: {e}")
                 print("Please enter the date/time in the correct format (e.g., 2020-01-01T00:00:00)")
-    
+                print("You can also ")
+
+            
     print("\n------------------------------ A GUI icon shoud've appear in your task bar ------------------------------")
     print("---------------------- Select that to pick the data file you would like to analyze ----------------------\n")
 
@@ -202,13 +206,17 @@ def mseed_upload():  ## function to upload miniseed files from the Minimus
 
     paths = sorted(file_paths_global) ## sorts paths alphabetically and saves it to a variable   
     
+    print("thinking...")
+
+    '''
     alpha = obspy.read(file_paths_global[0])
     beta = obspy.read(file_paths_global[1])
     gamma = obspy.read(file_paths_global[2])
 
-    #print("File 1: Start time: " + str(alpha[0].stats.starttime) + " End time:" + str(alpha[0].stats.endtime) )
-    #print("File 2: Start time: " + str(beta[0].stats.starttime) + " End time:" + str(beta[0].stats.endtime) )
-    #print("File 3: Start time: " + str(gamma[0].stats.starttime) + " End time:" + str(gamma[0].stats.endtime) )
+    print("File 1: Start time: " + str(alpha[0].stats.starttime) + " End time:" + str(alpha[0].stats.endtime) )
+    print("File 2: Start time: " + str(beta[0].stats.starttime) + " End time:" + str(beta[0].stats.endtime) )
+    print("File 3: Start time: " + str(gamma[0].stats.starttime) + " End time:" + str(gamma[0].stats.endtime) )
+    '''
 
     print("\nEnter the start and end times wish to look at")
     print("\nThe format should be like this:\n\n2020-01-01T00:00:00")
@@ -216,8 +224,17 @@ def mseed_upload():  ## function to upload miniseed files from the Minimus
     start = get_valid_datetime("Start date and time: ")
     end = get_valid_datetime("End date and time: ")
     
-    start_time = UTCDateTime(start)
-    end_time = UTCDateTime(end)  
+    if start is not None:
+        start_time = UTCDateTime(start)
+    else:
+        start_time = start  ## if start is none, it will start at the beginning of the file
+    if end is not None:
+        end_time = UTCDateTime(end)
+    else:
+        end_time = end  ## if end is none, it go to the end of the file
+
+    ## if both are none, then it will plot/calculate over the entire file. These calculations will take a while and the plots
+    ## will be dense. I advise NOT do this. This is so the user can escape the time input lines; if they don't want to input a time
     
     def process_multiple_miniseed(file_paths, start_time=None, end_time=None):
     
@@ -241,6 +258,8 @@ def mseed_upload():  ## function to upload miniseed files from the Minimus
             if len(st) == 0: ## Check if any traces remain after trimming
                 print(f"No data available in the specified time range for file: {file_path}")
                 continue
+            
+            print("thinking...")
 
             sample_rates = []
             times = []         ## lists for the current file's trace(s) 
@@ -265,9 +284,13 @@ def mseed_upload():  ## function to upload miniseed files from the Minimus
         times_e, times_n, times_z = times_all
         data_e, data_n, data_z = data_values_all
 
+        print("thinking...")
+
         return data_e, data_n, data_z, times_e, times_n, times_z, sample_rates1  ## The sample rates are the same
 
 #-------------------------------------------------------- Runs function -------------------------------------------------------#
+
+    print("thinking...")
 
     data_e, data_n, data_z, times_e, times_n, times_z, sr = process_multiple_miniseed(paths, start_time = start_time, 
                                                                                       end_time = end_time)
@@ -1556,10 +1579,15 @@ def main_menu():
         print("1: Magentometer")
         print("2: Seismometer")
         print("x: Exit")
+        #print("-----------------------------------------------")
+        #print("* note:                                *")
+        #print("\n*")
+        print("\n*Exit for all menu's is 'x' or ''")
         print("-----------------------------------------------")
         
         choice = input("\nEnter your choice (1-2, x): ").strip().lower()
         
+################################################################################################################################
 #------------------------------------------------------------------------------------------------------------------------------#
         
         if choice == "1":
@@ -1605,7 +1633,6 @@ def main_menu():
                     
 ################################################################################################################################
 #------------------------------------------------------------------------------------------------------------------------------#
-################################################################################################################################
 
 
         elif choice == "2":
@@ -1655,6 +1682,9 @@ def main_menu():
 
                         else:
                             print("\nInvalid input. Try again.")
+
+################################################################################################################################
+#------------------------------------------------------------------------------------------------------------------------------#
                     
                 elif sub_choice == "2":
 
