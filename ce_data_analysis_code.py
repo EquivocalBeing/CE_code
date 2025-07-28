@@ -169,7 +169,7 @@ def mseed_upload():  ## function to upload miniseed files from the Minimus
     
     def get_valid_datetime(prompt):  ## checks to make sure the user inputted a valid time
         while True:
-            date_input = input(prompt).strip().lower()
+            date_input = input(prompt)
             if date_input == "" or date_input == "" or date_input == "none":
                 return None
             try:
@@ -177,7 +177,7 @@ def mseed_upload():  ## function to upload miniseed files from the Minimus
             except Exception as e:
                 print(f"Invalid date/time format: {e}")
                 print("Please enter the date/time in the correct format (e.g., 2020-01-01T00:00:00)")
-                print("You can also ")
+                print("You can also enter '' to put no time constrant")
 
             
     print("\n------------------------------ A GUI icon shoud've appear in your task bar ------------------------------")
@@ -739,6 +739,7 @@ def plot_time_series(time, x, y, z, function):
         plt.yticks(fontsize = 20, fontweight = "bold")
         plt.xticks(fontsize = 20, fontweight = "bold")
         plt.grid(True)
+        #plt.tight_layout()
         plt.show()
 
     x_min = 0
@@ -1104,6 +1105,7 @@ def plot_spectrum(time, sr, x, y, z, ligo_freq, ligo_sr, ligo_x, ligo_y, ligo_z,
         plt.xlim(xmin,xmax)
 
         plt.grid(True, which="both", ls="-")
+        plt.tight_layout()
         plt.show()
 
 
@@ -1464,6 +1466,7 @@ def plot_spectrogram(sr, x, y, z, function):
 
         axis1.set_ylim(ymin,ymax) ## Uncomment to set limits
         axis1.set_xlim(xmin,xmax)
+        plt.tight_layout()
         plt.show()
 
 
@@ -1579,9 +1582,6 @@ def main_menu():
         print("1: Magentometer")
         print("2: Seismometer")
         print("x: Exit")
-        #print("-----------------------------------------------")
-        #print("* note:                                *")
-        #print("\n*")
         print("\n*Exit for all menu's is 'x' or ''")
         print("-----------------------------------------------")
         
