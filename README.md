@@ -1,6 +1,6 @@
 # Read Me
 
-This is the analysis code for the data retrieved when conducting CE site testing. Everything for the magnetometer and seismometer analysis is contained this is code. There is a .py version, which will run on any system that can run python. As well as a .jpy, if you are using jupyter notebook. The code operates via a GUI and user inputs, so you shouldn't have to manually check variable values and names.
+This is the analysis code for the data retrieved when conducting CE site testing. Everything for the magnetometer and seismometer analysis is contained this is code. There is a .py version, which will run on any system that can run python. As well as a .ipynb, if you are using jupyter notebook. The code operates via a GUI and user inputs, so you shouldn't have to manually check variable values and names.
 
 Additionally, there are LIGO data files. These are so you can compare the field data to what is recorded at ligo. You will need to put these data files in the same directory as the code(s). The code should run with and without the data files downloaded.
 
