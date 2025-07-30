@@ -1,9 +1,13 @@
 '''
-Sorry in advanced to whoever is trying to maintain or update this code
+Sorry in advanced to whoever is trying to maintain or update this code. I tried to not use magic numbers
+and annotate the best I could. 
 
-Good luck and sorry for any potential headache. o7
+Good luck and sorry for any potential headache.
 
 - Carlos A. Campos
+
+p.s. 
+Yes, I know that I am extra about my commenting/organizing
 '''
 
 print("thinking...")  ## To periodical let the user the code is still running and hasn't hit a runtime error
@@ -12,8 +16,8 @@ from obspy import UTCDateTime
 import tkinter as tk
 from tkinter import filedialog
 import pandas as pd
-print("thinking...")
 import numpy as np
+print("thinking...")
 from matplotlib import pyplot as plt
 from scipy import signal
 from matplotlib import gridspec
@@ -50,7 +54,7 @@ def csv_upload(function):  ## Function to upload CSV files from the WebDAQ
         ## file selection 
         file_path_global = filedialog.askopenfilename(title="Select a file", filetypes=[("CSV Files", "*.csv")])  
 
-        print(f"\nFile selected: {file_path_global}") ## Prints out slected file as sanity check
+        print(f"\nFile selected: {file_path_global}") ## Prints out data path as a sanity check
         print("\n---------------------------------------Close the GUI program window---------------------------------------")
 
     root = tk.Tk() ## Creates the GUI program window 
@@ -79,7 +83,7 @@ def csv_upload(function):  ## Function to upload CSV files from the WebDAQ
 #-----------------------------------------# This is the sample rate from the metadata #----------------------------------------#
 
     sample_rate = float(metadata["Sample Rate"])
-    print("\nSample Rate: " + metadata["Sample Rate"]) ## Prints out the sample rate as a sanity check
+    print("\nSample Rate: " + metadata["Sample Rate"]) ## sanity check
 
 #------------------------------------------------------------------------------------------------------------------------------#
 
@@ -140,7 +144,7 @@ def csv_upload(function):  ## Function to upload CSV files from the WebDAQ
             #ligo.columns = ["Sample", "Time (s)", "Voltage X (V)", "Voltage Y (V)", "Voltage Z (V)"]
             
 
-            ctrl_z = ligo['Voltage Z (V)'][0:647487] * calibration   
+            ctrl_z = ligo['Voltage Z (V)'][0:647487] * calibration   ## the data is shorter then the other two
             ctrl_y = ligo['Voltage Y (V)'] * calibration
             ctrl_x = ligo['Voltage X (V)'] * calibration
             ctrl_sr = 5120
@@ -170,7 +174,7 @@ def mseed_upload():  ## function to upload miniseed files from the Minimus
     def get_valid_datetime(prompt):  ## checks to make sure the user inputted a valid time
         while True:
             date_input = input(prompt)
-            if date_input == "" or date_input == "" or date_input == "none":
+            if date_input == "" or date_input == "" or date_input == "none" or date_input == "x"or date_input == "X":
                 return None
             try:
                 return UTCDateTime(date_input)
@@ -216,6 +220,10 @@ def mseed_upload():  ## function to upload miniseed files from the Minimus
     print("File 1: Start time: " + str(alpha[0].stats.starttime) + " End time:" + str(alpha[0].stats.endtime) )
     print("File 2: Start time: " + str(beta[0].stats.starttime) + " End time:" + str(beta[0].stats.endtime) )
     print("File 3: Start time: " + str(gamma[0].stats.starttime) + " End time:" + str(gamma[0].stats.endtime) )
+
+    This was going to be so the user can see the start and end time(s). However, the Minimus will default to the same
+    date if the GPS is not connected. So, it's start and end time(s) are often inaccurate. So, make sure the Minimus is getting 
+    a GPS signal when taking data
     '''
 
     print("\nEnter the start and end times wish to look at")
@@ -247,7 +255,6 @@ def mseed_upload():  ## function to upload miniseed files from the Minimus
 
             st = obspy.read(file_path) #---------------------------- Reads the MiniSEED file ----------------------------------#
 
-
             try:
                 print(f"Filtering data between {start_time} and {end_time}")
                 st = st.trim(starttime=start_time, endtime=end_time)
@@ -268,7 +275,6 @@ def mseed_upload():  ## function to upload miniseed files from the Minimus
 #---------------------------------------- Process each remaining trace in the file --------------------------------------------#
 
             for trace in st:
-
 
                 sample_rates.append(trace.stats.sampling_rate) #---------- Append trace data to lists for this file -----------#
                 times.append(trace.times())                    #--------------# Relative times for each sample #---------------#
@@ -377,7 +383,7 @@ def get_optional_float(prompt, func, ID, sensor, time,  allow_back=True):
                 try:
                     return float(user_input)
                 except ValueError:
-                    print("Invalid input. Please enter a number, 'none', or 'x'.")     
+                    print("Invalid input. Please enter a number, 'none', or 'x'.")
             elif ID == "x_max":
                 if user_input in ["none", "", "default"]:
                     return time[len(time) - 1]
@@ -386,7 +392,7 @@ def get_optional_float(prompt, func, ID, sensor, time,  allow_back=True):
                 try:
                     return float(user_input)
                 except ValueError:
-                    print("Invalid input. Please enter a number, 'none', or 'x'.")      
+                    print("Invalid input. Please enter a number, 'none', or 'x'.")
 
             else:
                 if user_input in ["none", "", "default"]:
@@ -396,8 +402,8 @@ def get_optional_float(prompt, func, ID, sensor, time,  allow_back=True):
                 try:
                     return float(user_input)
                 except ValueError:
-                    print("Invalid input. Please enter a number, 'none', or 'x'.")   
-            
+                    print("Invalid input. Please enter a number, 'none', or 'x'.")
+
 ################################################################################################################################
 #------------------------------------------------------------------------------------------------------------------------------#
 ################################################################################################################################
@@ -676,7 +682,7 @@ def get_optional_float(prompt, func, ID, sensor, time,  allow_back=True):
 
 
 def plot_time_series(time, x, y, z, function):
-    #print("Running time series plot...")
+    print("Running time series plot...")
     
     def time_series(channels, t, zed, north, east, xmax, xmin, ymax, ymin, function):
         
@@ -758,17 +764,23 @@ def plot_time_series(time, x, y, z, function):
 #------------------------------------------------------------------------------------------------------------------------------#
 
     while True:
-        '''print("\n---------------------------------------")
+        # In Jupyter the place of the input line is not consistent. So, sometimes it is printed out before the option list.
+        # To fix this, the option list was placed into the input line, so that everything is alway together.
+
+        sub_choice = input("\n---------------------------------------\n-- Time Series Options --\n1: Zoom in on specific time range\nx: Return to main menu\n---------------------------------------\n\nEnter your choice (1-2, x): ")
+        
+        # This is what the menu will look like printed out
+        '''
+        print("\n---------------------------------------")
         print("-- Time Series Options --")
-        #print("1: Save plot to file")
+        #print("1: Save plot to file")  -- Maybe later
         print("2: Zoom in on specific time range")
         print("x: Return to main menu")
         print("---------------------------------------")
         
-        Enter your choice (1-2, x): '''
+        Enter your choice (1-2, x): 
+        '''
 
-        sub_choice = input("\n---------------------------------------\n-- Time Series Options --\n1: Zoom in on specific time range\nx: Return to main menu\n---------------------------------------\n\nEnter your choice (1-2, x): ")
-        
         if sub_choice == "1":
             print("\nWhat x limits do you want (You can input None)")
             x_max = get_optional_float("Upper bound: ", "time_series", 'x_max', None, time)
@@ -791,27 +803,27 @@ def plot_time_series(time, x, y, z, function):
 #------------------------------------------------------------------------------------------------------------------------------#
 
             while True:
+
+                channel = input("\n\n---------------------------------------\nDo you want all three channels or just one?\n1: All three\n2: East\n3: North\n4: Z\nx: Return to Time Series Options\n---------------------------------------\n\nEnter your choice (1-4, x): ")
         
-                ''' This is what the menu will look like printed out. It iss done in one input line to ensure that the prompt 
-                and input line are outputted together
-                
+                # This is what the menu will look like printed out
+                '''                
                 ---------------------------------------
                 "Do you want all three channels or just one?
                 "1: All three
-                "2: North
-                3: East
+                "2: East
+                3: North
                 4: Z
                 x: Return to Time Series Options
                 ---------------------------------------
                 
-                Enter your choice (1-4, x): '''
-                
-                channel = input("\n\n---------------------------------------\nDo you want all three channels or just one?\n1: All three\n2: North\n3: East\n4: Z\nx: Return to Time Series Options\n---------------------------------------\n\nEnter your choice (1-4, x): ")
+                Enter your choice (1-4, x): 
+                '''
 
 ################################################################################################################################
 #------------------------------------------------------------------------------------------------------------------------------#
 
-                if channel == "1": ## All Channels
+                if channel == "1":
                     if function == "mag":
                         time_series("2", time, z, y, x, x_max, x_min, y_max, y_min, function)
                         time_series("3", time, z, y, x, x_max, x_min, y_max, y_min, function)
@@ -819,20 +831,24 @@ def plot_time_series(time, x, y, z, function):
 
                     elif function == "seis" or function == "mini":
                         time_series(channel, time, z, y, x, x_max, x_min, y_max, y_min, function)
-                    
 
-                elif channel == "2": ## N Channel
+
+#---------------------------------------------------------- E Channel ---------------------------------------------------------#
+                elif channel == "2":
                     time_series(channel, time, z, y, x, x_max, x_min, y_max, y_min, function)
                     
 
-                elif channel == "3": ## E Channel
+#---------------------------------------------------------- E Channel ---------------------------------------------------------#
+                elif channel == "3":
                     time_series(channel, time, z, y, x, x_max, x_min, y_max, y_min, function)
                     
 
-                elif channel == "4": ## Z Channel
+#---------------------------------------------------------- E Channel ---------------------------------------------------------#
+                elif channel == "4":
                     time_series(channel, time, z, y, x, x_max, x_min, y_max, y_min, function)
-                    
 
+                    
+#------------------------------------------------------------------------------------------------------------------------------#
                 elif channel == "x" or channel == "":
                     print("\nReturning to Time Series Options...")
                     break
@@ -840,7 +856,7 @@ def plot_time_series(time, x, y, z, function):
                 else:
                     print("\nInvalid input. Try again.")
     
-#------------------------------------------------------------------------------------------------------------------------------#
+################################################################################################################################
 #------------------------------------------------------------------------------------------------------------------------------#
 
         elif sub_choice == "x" or sub_choice == "" or sub_choice == "2":
@@ -935,12 +951,24 @@ def plot_spectrum(time, sr, x, y, z, ligo_freq, ligo_sr, ligo_x, ligo_y, ligo_z,
 
     warnings.simplefilter('ignore')
     
-    
+    '''
+    This the function that calculates the ASD spectra of the data acquired. A Power Specral Density (PSD) plot is calculated
+    first via signal.welch from scipy. Next the square root of this data is taken to turn it into an Amplitude Spectral
+    Density (ASD) plot. Next signal peaks are found to see what frequencies are present in the data. This process can be
+    refined much further. After those are found everything is plotted togther
+
+    The control/ligo data for the seismometer was acquired from the LIGO Hanford Observatory (LHO) as a ready to plot 
+    function. However, for the magnetometer, we took data with our setup to ensure the sensitivity was the same. So, that means
+    that an additional ASD has to be calculated for the control data. 
+    '''
     def asd(data_z, data_n, data_e, sample_rate, lf, lx, ly, lz, bart_sample_rate, bart_x, bart_y, bart_z, frequency,
             over_lap, fft, signal_prom, ymin, ymax, xmin, xmax, func, channel):
 
-#----------# If you don't want to look at the whole time series, you can add '1' to the variables, i.e z1, y1, x1 #------------#
-        ##
+        '''
+        The magnetometer workflow has an additional function to zoom in on a specific frequency of the user's choice. 
+        If this is choosen, the peaks are found differential. This is to make it easier to print out the amplitude of
+        the desired frequency. 
+        '''
         def peaks(signal_freq, signal_log, frequency, signal_prom):
             tolerance = 1
             if frequency is None:
@@ -954,7 +982,7 @@ def plot_spectrum(time, sr, x, y, z, ligo_freq, ligo_sr, ligo_x, ligo_y, ligo_z,
 
             return peak
 
-#------------------------------------------------------------------------------------------------------------------------------#
+#---------------------------------------------------------- Z Channel ---------------------------------------------------------#
 
         if data_z is not None:
             f_z, Pxx_den_z = signal.welch(data_z, sample_rate, window= 'hamming', 
@@ -964,7 +992,7 @@ def plot_spectrum(time, sr, x, y, z, ligo_freq, ligo_sr, ligo_x, ligo_y, ligo_z,
             log_z = np.log(az)      
 
             if func == "displacement":
-                mz = az / (2*np.pi *f_z) 
+                mz = az / (2* np.pi *f_z) 
             
             peak_z = peaks(f_z, log_z, frequency, signal_prom)
             
@@ -973,7 +1001,7 @@ def plot_spectrum(time, sr, x, y, z, ligo_freq, ligo_sr, ligo_x, ligo_y, ligo_z,
                                           nperseg= (bart_sample_rate *fft), noverlap= round(bart_sample_rate *(over_lap *0.01)))
             lz = np.sqrt(amp_z)
             
-#------------------------------------------------------------------------------------------------------------------------------#
+#---------------------------------------------------------- N Channel ---------------------------------------------------------#
 
         if data_n is not None:
             f_n, Pxx_den_n = signal.welch(data_n, sample_rate, window= 'hamming', 
@@ -983,7 +1011,7 @@ def plot_spectrum(time, sr, x, y, z, ligo_freq, ligo_sr, ligo_x, ligo_y, ligo_z,
             log_n = np.log(an)
             
             if func == "displacement":
-                mn = an / (2*np.pi *f_n)  
+                mn = an / (2* np.pi *f_n)  
             
             peak_n = peaks(f_n, log_n, frequency, signal_prom)
 
@@ -992,7 +1020,7 @@ def plot_spectrum(time, sr, x, y, z, ligo_freq, ligo_sr, ligo_x, ligo_y, ligo_z,
                                           nperseg= (bart_sample_rate *fft), noverlap= round(bart_sample_rate *(over_lap *0.01)))
             ly = np.sqrt(amp_y)
 
-#------------------------------------------------------------------------------------------------------------------------------#
+#---------------------------------------------------------- E Channel ---------------------------------------------------------#
 
         if data_e is not None:
             f_e, Pxx_den_e = signal.welch(data_e, sample_rate, window= 'hamming', 
@@ -1001,7 +1029,7 @@ def plot_spectrum(time, sr, x, y, z, ligo_freq, ligo_sr, ligo_x, ligo_y, ligo_z,
             log_e = np.log(ae)
             
             if func == "displacement":
-                me = ae / (2*np.pi *f_e)
+                me = ae / (2* np.pi *f_e)
             
             peak_e = peaks(f_e, log_e, frequency, signal_prom)
             
@@ -1022,7 +1050,6 @@ def plot_spectrum(time, sr, x, y, z, ligo_freq, ligo_sr, ligo_x, ligo_y, ligo_z,
 
         if func == "velocity":
             
-            #print(len(data_z))
             if data_z is not None:
                 up = az
             if data_n is not None:
@@ -1058,32 +1085,69 @@ def plot_spectrum(time, sr, x, y, z, ligo_freq, ligo_sr, ligo_x, ligo_y, ligo_z,
             plt.plot(f_n, north, color = 'red', linewidth = 1.75, label = drctn_title[1])
             plt.plot(f_e, east, color = 'mediumblue', linewidth = 1.75, label = drctn_title[0])
 
-            plt.scatter(f_z[peak_z], up[peak_z], s = 100, color = 'limegreen', marker = 'x', 
-                linewidths = 2.5, label = 'Signal Peaks')
-            plt.scatter(f_n[peak_n], north[peak_n], s = 100, color = 'limegreen', marker = 'x', 
-                        linewidths = 2.5)
-            plt.scatter(f_e[peak_e], east[peak_e], s = 100, color = 'limegreen', marker = 'x', 
+            if len(f_z[peak_z]) != 0:
+                plt.scatter(f_z[peak_z], up[peak_z], s = 100, color = 'limegreen', marker = 'x', 
+                    linewidths = 2.5, label = 'Signal Peaks')
+
+            if len(f_n[peak_n]) != 0:
+                plt.scatter(f_n[peak_n], north[peak_n], s = 100, color = 'limegreen', marker = 'x', 
+                    linewidths = 2.5)
+                
+            if len(f_e[peak_e]) != 0:
+                plt.scatter(f_e[peak_e], east[peak_e], s = 100, color = 'limegreen', marker = 'x', 
                         linewidths = 2.5)
 
+################################################################################################################################
+#------------------------------------------------------------------------------------------------------------------------------#
 
         elif channel == "east":
-            title = drctn_title[0]            
+            title = drctn_title[0]              
             plt.plot(f_e, east, color = 'mediumblue', linewidth = 1.75, label = 'E Direction', alpha = 0.5)
             plt.plot(lf, lx, color = "dimgrey", linewidth = 2, label = "LIGO Washington X", alpha = 0.5)
 
+            if len(f_e[peak_e]) != 0:
+                plt.scatter(f_e[peak_e], east[peak_e], s = 100, color = 'limegreen', marker = 'x', 
+                        linewidths = 2.5)
+                
+                if frequency != None:
+                    print(f"E direction:\n{f_e[peak_e][0]: .2f} Hz \nAmpl: {east[peak_e][0]: .3e}\n")
+
+            else:
+                print("No peaks in the E directions\n")
+
+#------------------------------------------------------------------------------------------------------------------------------#
 
         elif channel == "north":
             title = drctn_title[1]
             plt.plot(f_n, north, color = 'red', linewidth = 1.75, label = 'N Direction', alpha = 0.5)
             plt.plot(lf, ly, color = "dimgrey", label = "LIGO Washington Y", alpha = 0.5)
 
+            if len(f_n[peak_n]) != 0:
+                plt.scatter(f_n[peak_n], north[peak_n], s = 100, color = 'limegreen', marker = 'x', 
+                    linewidths = 2.5)
+                
+                if frequency != None:
+                    print(f"N direction:\n{f_n[peak_n][0]: .2f} Hz \nAmpl: {north[peak_n][0]: .3e}\n")
+
+            else:
+                print("No peaks in the N directions\n")
+
+#------------------------------------------------------------------------------------------------------------------------------#
 
         elif channel == "zed":
-            #print(up)
             title = drctn_title[2]
             plt.plot(f_z, up, color = 'black', linewidth = 1.75, label = 'Z Direction', alpha = 0.5)
             plt.plot(lf, lz, color = "dimgrey", label = "LIGO Washington Z", alpha = 0.5)
             
+            if len(f_z[peak_z]) != 0:
+                plt.scatter(f_z[peak_z], up[peak_z], s = 100, color = 'limegreen', marker = 'x', 
+                    linewidths = 2.5, label = 'Signal Peaks')
+                
+                if frequency != None:
+                    print(f"Z direction:\n{f_z[peak_z][0]: .2f} Hz \nAmpl: {up[peak_z][0]: .3e}\n")
+            else:
+                print("No peaks in the Z directions\n")
+
 
 ################################################################################################################################
 #------------------------------------------------------------------------------------------------------------------------------#
@@ -1137,34 +1201,41 @@ def plot_spectrum(time, sr, x, y, z, ligo_freq, ligo_sr, ligo_x, ligo_y, ligo_z,
         # In Jupyter the place of the input line is not consistent. So, sometimes it is printed out before the option list.
         # To fix this, the option list was placed into the input line, so that everything is alway together.
         
-        # This is what the printed out option list will look like
-        '''---------------------------------------
-           -- ASD Spectra Options --
-           1: Compare to LIGO Hanford Data
-           2: Change plot limits / FFT Parameters
-           3: Look at specific times in the time series
-           x: Return to main menu")
-           ---------------------------------------
-
-           Enter your choice (1-2, x): '''
         if function == "seis":
             sub_choice = input("\n\n---------------------------------------\n-- ASD Spectra Options --\n1: Compare to LIGO Hanford Data\n2: Change plot limits / FFT Parameters\n3: Look at specific times in the time series\nx: Return to main menu\n---------------------------------------\n\nEnter your choice (1-3, x): ")
 
-            # The magnetometer analysis has a function that the seismometer doesn't.
-            # This if statement adds in this third option
-            '''---------------------------------------
-               -- ASD Spectra Options --
-               1: Compare to LIGO Hanford Data
-               2: Change plot limits / FFT Parameters
-               3: Look at specific times in the time series
-               4: Look at a specific frequency 
-               x: Return to main menu")
-               ---------------------------------------
+            # This is what the printed out option list will look like
 
-               Enter your choice (1-4, x): '''
+            '''
+            ---------------------------------------
+            -- ASD Spectra Options --
+            1: Compare to LIGO Hanford Data
+            2: Change plot limits / FFT Parameters
+            3: Look at specific times in the time series
+            x: Return to main menu")
+            ---------------------------------------
+
+            Enter your choice (1-2, x): 
+            '''
 
         elif function == "mag":
             sub_choice = input("\n\n---------------------------------------\n-- ASD Spectra Options --\n1: Compare to LIGO Hanford Data\n2: Change plot limits / FFT Parameters\n3: Look at specific times in the time series\n4: Look at a specific frequency\nx: Return to main menu\n---------------------------------------\n\nEnter your choice (1-4, x): ")
+
+            # The magnetometer  workflow has a the function to zoom in on a specific frequency.
+            # The seismometer does not need this function, which is why there are two menu/input lines
+
+            '''
+            ---------------------------------------
+            -- ASD Spectra Options --
+            1: Compare to LIGO Hanford Data
+            2: Change plot limits / FFT Parameters
+            3: Look at specific times in the time series
+            4: Look at a specific frequency 
+            x: Return to main menu")
+            ---------------------------------------
+
+            Enter your choice (1-4, x): 
+            '''
 
 ################################################################################################################################
 #------------------------------------------------------------------------------------------------------------------------------# 
@@ -1595,9 +1666,6 @@ def main_menu():
             function = "mag"
             
             sr, time, x, y, z, ligo_x, ligo_y, ligo_z, ligo_sr = csv_upload(function)
-            
-            #print(len(ligo_z))
-            #print(ligo_sr)
             
             while True:
                 print("\n---------------------------------------")
