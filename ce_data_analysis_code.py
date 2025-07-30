@@ -749,8 +749,12 @@ def plot_time_series(time, x, y, z, function):
         plt.show()
 
     x_min = 0
-    x_max = time[0][len(time[0]) - 1]
-    
+    if function == "mini":
+        x_max = time[0][len(time[0]) - 1]
+    else:
+        x_max = time[len(time) - 1]
+
+
     if function == "mag":
         time_series("2", time, z, y, x, x_max, x_min, None, None, function)
         time_series("3", time, z, y, x, x_max, x_min, None, None, function)
