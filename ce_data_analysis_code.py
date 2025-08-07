@@ -15,6 +15,7 @@ import obspy
 from obspy import UTCDateTime
 import tkinter as tk
 from tkinter import filedialog
+from tkinter import PhotoImage
 import pandas as pd
 import numpy as np
 print("thinking...")
@@ -65,7 +66,9 @@ def csv_upload(function):  ## Function to upload CSV files from the WebDAQ
         print("----------------------------------------------------------------------------------------------------------")
 
     root = tk.Tk() ## Creates the GUI program window 
-    root.title("File Uploader")
+    root.title("File Uploader GUI")
+    icon = PhotoImage(file="ce_gui_image.png")
+    root.iconphoto(False, icon)
 
     upload_button = tk.Button(root, text="Upload Sensor Data", command=upload_file) ## Create button txt 
     upload_button.pack(pady=15)
@@ -208,7 +211,9 @@ def mseed_upload():  ## function to upload miniseed files from the Minimus
 
 
     root = tk.Tk()
-    root.title("Multi File Uploader")
+    root.title("Multi File Uploader GUI")
+    icon = PhotoImage(file="ce_gui_image.png")
+    root.iconphoto(False, icon)
 
     upload_button = tk.Button(root, text="Upload mseed flie", command=upload_files)
     upload_button.pack(pady=15)
@@ -621,7 +626,7 @@ def get_optional_float(prompt, func, ID, sensor, time,  allow_back=True):
                     
             elif ID == "x_max": 
                 if user_input in ["none", "", "default"]:
-                    return None
+                    return time[len(time) - 1]
                 if allow_back and user_input == "x":
                     return "BACK"
                 try:
@@ -631,7 +636,7 @@ def get_optional_float(prompt, func, ID, sensor, time,  allow_back=True):
                     
             elif ID == "x_min": 
                 if user_input in ["none","", "default"]:
-                    return None
+                    return 0
                 if allow_back and user_input == "x":
                     return "BACK"
                 try:
