@@ -45,9 +45,10 @@ file_path_global = None
 def csv_upload(function):  ## Function to upload CSV files from the WebDAQ
     
     print("\n------------------------------ A GUI icon shoud've appear in your task bar ------------------------------")
-    print(" This icon has the top right corner folded ")
-    print(" Default file location is Downloadds" \
-    "")
+    print("---------------------------------------------------------------------------------------------------------")
+    print("------------------------ This is the file icon with the top right corner folded -------------------------")
+    print("---------------------------------- Default file location is Downloadds ----------------------------------")
+    print("---------------------------------------------------------------------------------------------------------")
     print("---------------------- Select that to pick the data file you would like to analyze ----------------------\n")
 
     
@@ -67,8 +68,18 @@ def csv_upload(function):  ## Function to upload CSV files from the WebDAQ
 
     root = tk.Tk() ## Creates the GUI program window 
     root.title("File Uploader GUI")
-    icon = PhotoImage(file="ce_gui_image.png")
-    root.iconphoto(False, icon)
+    icon_path = os.path.join(os.getcwd(), 'ce_gui_image.png')
+
+    try:
+        # For Jupyter and most platforms
+        icon = tk.PhotoImage(file=icon_path)
+        root.iconphoto(True, icon)
+
+        # Optional: Set taskbar icon on Windows standalone .py script
+        if os.name == 'nt':  # Only works outside Jupyter
+            root.iconbitmap(icon_path.replace(".png", ".ico"))
+    except Exception as e:
+        print(f"Could not set icon: {e}")
 
     upload_button = tk.Button(root, text="Upload Sensor Data", command=upload_file) ## Create button txt 
     upload_button.pack(pady=15)
@@ -1200,6 +1211,7 @@ def plot_spectrum(time, sr, x, y, z, ligo_freq, ligo_sr, ligo_x, ligo_y, ligo_z,
 ################################################################################################################################
 #------------------------------------------------------------------------------------------------------------------------------#
 
+        ax = plt.gca()
         plt.legend(loc = "lower left", fontsize = 14.5, ncol = 2)
 
         plt.title('FFT: ' + str(fft) + "s", fontsize = 18, loc = "left",style ='italic')
@@ -1211,7 +1223,10 @@ def plot_spectrum(time, sr, x, y, z, ligo_freq, ligo_sr, ligo_x, ligo_y, ligo_z,
         plt.ylabel(ylabel, fontweight = "bold", fontsize = 20)
 
         plt.yticks(fontsize = 20, fontweight = "bold")
+        ax.tick_params(axis='both', which='minor', labelsize=16) 
+        
         plt.xticks(fontsize = 20, fontweight = "bold")
+        ax.tick_params(axis='both', which='minor', labelsize=16)
 
         plt.ylim(ymin,ymax)
         plt.xlim(xmin,xmax)
@@ -1282,9 +1297,10 @@ def plot_spectrum(time, sr, x, y, z, ligo_freq, ligo_sr, ligo_x, ligo_y, ligo_z,
 
             y_max = y_max_p
             y_min = y_min_p
-
-            my_max = my_max_p
-            my_min = my_min_p
+            
+            if function == "seis":
+                my_max = my_max_p
+                my_min = my_min_p
 
             fft_length = fft_length_p
 
@@ -1857,7 +1873,7 @@ def main_menu():
                         print("1: Plot Time Series")
                         print("2: Plot FFT Spectrum")
                         print("3: Plot Spectrogram")
-                        print("x: Return to sensor menu")
+                        print("x: Return to Seismometer menu")
                         print("-----------------------------------------------")
 
                         sub_choice = input("\nEnter your choice (1-3, x): ").strip().lower()
@@ -1905,7 +1921,7 @@ def main_menu():
                         print("1: Plot Time Series")
                         print("2: Plot FFT Spectrum")
                         print("3: Plot Spectrogram")
-                        print("x: Return to main menu")
+                        print("x: Return to Seismometer menu")
                         print("-----------------------------------------------")
 
                         sub_choice = input("\nEnter your choice (1-3, x): ").strip().lower()
@@ -1940,7 +1956,7 @@ def main_menu():
                     print("\nInvalid input. Try again.")
             
         elif choice == "x" or choice == "":
-            confirm = input("Do you wish to exit? (yes/no): ").strip().lower()
+            confirm = input("Do you wish to exit? (y/n): ").strip().lower()
 
             if confirm in ['yes', 'y']:
                 print("\nExiting. Goodbye!")
