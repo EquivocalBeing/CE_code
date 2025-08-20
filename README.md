@@ -20,7 +20,7 @@ You will have to install the following libraries before running the code.
 - shapely
 - pyproj
 
-Here is how to install them in your Jupyter terminal.
+Paste the following codeblock in your Anaconda terminal to install them:
 ```
 pip install arcgis arcgis-mapping geopandas shapely pyproj
 ```
