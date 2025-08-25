@@ -92,21 +92,22 @@ def csv_upload(function):  ## Function to upload CSV files from the WebDAQ
     root = tk.Tk()
     root.title("File Uploader")
 
-    '''# Set the icon (for both taskbar and window)
+    ## This was to give the GUI a custom icon. It kind of worked on linux. But, didn't work on windows.
+    ## kept it in just in case
+    '''
     icon_path = os.path.join(os.getcwd(), 'ce_gui_icon.png')
 
     try:
-        # For Jupyter and most platforms
         icon = tk.PhotoImage(file=icon_path)
         root.iconphoto(True, icon)
 
-        # Optional: Set taskbar icon on Windows standalone .py script
         if os.name == 'nt':  # Only works outside Jupyter
             root.iconbitmap(icon_path.replace(".png", ".ico"))
-    except Exception as e:
-        print(f"Could not set icon: {e}")'''
 
-    # Add a label and button for demonstration
+    except Exception as e:
+        print(f"Could not set icon: {e}")
+    '''
+
     label = tk.Label(root, text="Select field data", font=("Arial", 10))
     label.pack(padx = 30)
 
@@ -265,6 +266,10 @@ def mseed_upload():  ## function to upload miniseed files from the Minimus
     
     print("thinking...")
 
+    ## This was going to be so the user can see the start and end time(s). However, the Minimus will default to the same
+    ## date if the GPS is not connected. So, it's start and end time(s) are often inaccurate. So, make sure the Minimus is getting 
+    ## a GPS signal when taking data
+
     '''
     alpha = obspy.read(file_paths_global[0])
     beta = obspy.read(file_paths_global[1])
@@ -273,11 +278,7 @@ def mseed_upload():  ## function to upload miniseed files from the Minimus
     print("File 1: Start time: " + str(alpha[0].stats.starttime) + " End time:" + str(alpha[0].stats.endtime) )
     print("File 2: Start time: " + str(beta[0].stats.starttime) + " End time:" + str(beta[0].stats.endtime) )
     print("File 3: Start time: " + str(gamma[0].stats.starttime) + " End time:" + str(gamma[0].stats.endtime) )
-
-    This was going to be so the user can see the start and end time(s). However, the Minimus will default to the same
-    date if the GPS is not connected. So, it's start and end time(s) are often inaccurate. So, make sure the Minimus is getting 
-    a GPS signal when taking data
-    '''
+    '''    
 
     print("\nEnter the start and end times wish to look at")
     print("\nThe format should be like this:\n\n2020-01-01T00:00:00")
