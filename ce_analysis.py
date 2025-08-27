@@ -740,56 +740,78 @@ def plot_time_series(time, x, y, z, function):
     
     def time_series(channels, t, zed, north, east, xmax, xmin, ymax, ymin, function):
         
-        if function == "seis":
-            title = "Seismic"
-            labels = ['E', 'N', 'Z']
-            y_label = "Amplitude (m/s)"
+        
+        title = "Seismic"
+        labels = ['E', 'N', 'Z']
+        y_label = "Amplitude (m/s)"
 
-            t1 = t
-            t2 = t
-            t3 = t
+        t0, t1, t2 = t, t, t
             
-        elif function == "mag":
+        if function == "mag":
             title = "Magnetic"
             labels = ['X', 'Y', 'Z']
             y_label = "Amplitude [T]"
 
-            t1 = t
-            t2 = t
-            t3 = t
-
         elif function == "mini":
-            title = "Seismic"
-            labels = ['E', 'N', 'Z']
-            y_label = "Amplitude (m/s)"
 
-            t1 = t[0]
-            t2 = t[1]
-            t3 = t[2]
+            # Axises       E     N     Z
+            t0, t1, t2 = t[0], t[1], t[2]
+
+        channel_map = {
+            '1': [(title, labels[2], zed, t2 , 'black'), 
+                  (title, labels[1], north, t1 , 'red'), 
+                  (title, labels[0], east, t0, 'blue')],    ## All Axises
+
+            '2': [(title, labels[0], east, t0, 'blue')],    ## X / E Axis
+            '3': [(title, labels[1], north, t1, 'red')],    ## Y / N Axis
+            '4': [(title, labels[2], zed, t2, 'black')],    ## Z Axis
+        }
+
+        ## ------------------------------------------------------------------------------------- ##
+
+        if channels == "0":
+            for data, label, t, color in zip([east, north, zed],
+                                            labels, [t0, t1, t2],
+                                            ['blue', 'red', 'black']):
+                
+                plt.figure(figsize = (19, 11))
+                ax = plt.gca()
+                ax.yaxis.get_offset_text().set_fontsize(16)
+
+                plt.plot(t, data, linewidth = 1.5, color = color, label = label)
+
+                plt.title(title + " Channel: " + label, fontweight = 'bold', fontsize = 25)
+                plt.xlabel("Time (s)", fontweight = "bold", fontsize = 20)
+                plt.ylabel(y_label, fontweight = "bold", fontsize = 20)
+
+                plt.xlim(xmin, xmax)
+                plt.ylim(ymin, ymax)
+                
+                plt.yticks(fontsize = 20, fontweight = "bold")
+                plt.xticks(fontsize = 20, fontweight = "bold")
+                
+                plt.legend(loc = "upper right", fontsize = 18)
+                plt.grid(True)
+                plt.tight_layout()
+                plt.show()
+            return
+
+        ## ------------------------------------------------------------------------------------- ##        
 
         plt.figure(figsize = (19, 11))
         ax = plt.gca()
         ax.yaxis.get_offset_text().set_fontsize(16)
             
-        if channels == "1": ## All Axises
+        for plot_title, label, data, t , color in channel_map[channels]:
+
+            plt.plot(t, data, linewidth = 1.5, color = color, label = label)
+            if channels != '1':
+                plt.title(plot_title + " Channel: " + label, fontweight = 'bold', fontsize = 25)
+
+        if channels == '1':
             plt.title(title + " Data Time Series", fontweight = 'bold', fontsize = 25)
-            plt.plot(t3, zed, linewidth = 1.5, color = 'black', label = labels[2]) 
-            plt.plot(t2, north, linewidth = 1.5, color = 'red', label = labels[1])
-            plt.plot(t1, east, linewidth = 1.5, color = 'mediumblue', label = labels[0])
 
-        elif channels == "2": ## X Axis
-            plt.title(title + " Channel: " + labels[0], fontweight = 'bold', fontsize = 25)
-            plt.plot(t1, east, linewidth = 1.5, color = 'mediumblue', label = labels[0])
-
-        elif channels == "3": ## Y Axis
-            plt.title(title + " Channel: " + labels[1], fontweight = 'bold', fontsize = 25)
-            plt.plot(t2, north, linewidth = 1.5, color = 'red', label = labels[1])
-
-        elif channels == "4": ## Z Axis
-            plt.title(title + " Channel: " + labels[2], fontweight = 'bold', fontsize = 25)
-            plt.plot(t3, zed, linewidth = 1.5, color = 'black', label = labels[2])
-
-        plt.legend(loc = "upper right", fontsize = 18)
+        
         plt.xlabel("Time (s)", fontweight = "bold", fontsize = 20)
         plt.ylabel(y_label, fontweight = "bold", fontsize = 20)
 
@@ -798,6 +820,8 @@ def plot_time_series(time, x, y, z, function):
 
         plt.yticks(fontsize = 20, fontweight = "bold")
         plt.xticks(fontsize = 20, fontweight = "bold")
+        
+        plt.legend(loc = "upper right", fontsize = 18)
         plt.grid(True)
         plt.tight_layout()
         plt.show()
@@ -810,9 +834,7 @@ def plot_time_series(time, x, y, z, function):
 
 
     if function == "mag":
-        time_series("2", time, z, y, x, x_max, x_min, None, None, function)
-        time_series("3", time, z, y, x, x_max, x_min, None, None, function)
-        time_series("4", time, z, y, x, x_max, x_min, None, None, function)
+        time_series("0", time, z, y, x, x_max, x_min, None, None, function)
         amp = "[T]"
     
     elif function == "seis" or function == "mini":
@@ -831,7 +853,7 @@ def plot_time_series(time, x, y, z, function):
         print("\n\n----------------------------------------------------------------------------------------------------------")
         print("----------------------------------------------------------------------------------------------------------")
 
-        sub_choice = input("\n---------------------------------------\n-- Zoom in Menu --\n1: Zoom in on specific time range\nx: Return to main menu\n---------------------------------------\n\nEnter your choice (0-1, x): ")
+        sub_choice = input("\n---------------------------------------\n-- Zoom in Menu --\n1: Zoom in on specific time range\nx: Return to main menu\n---------------------------------------\n\nEnter your choice (1, x): ")
         
         # This is what the menu will look like printed out
         
@@ -842,10 +864,10 @@ def plot_time_series(time, x, y, z, function):
         x: Return to previous menu
         ---------------------------------------
         
-        Enter your choice (0-2, x): 
+        Enter your choice (1, x): 
         '''
 
-        #print("3: Save plot to file")                   # -- Maybe later
+        #print("2: Save plot to file")                   # -- Maybe later
 
         if sub_choice == "1":
             x_min = get_optional_float("Lower bound [s]: ", "time_series", 'x_min', None, time)
@@ -857,7 +879,7 @@ def plot_time_series(time, x, y, z, function):
             if x_max == "BACK":
                 return
             
-            
+            ## ------------------------------------------------------------------------------------- ##
         
             print("\nWhat y limits do you want (You can input None)")
             y_min = get_optional_float("Lower bound " + amp + ": ", "time_series", None, None, time)
@@ -909,25 +931,23 @@ def plot_time_series(time, x, y, z, function):
 
                 elif channel == "1":
                     if function == "mag":
-                        time_series("2", time, z, y, x, x_max, x_min, y_max, y_min, function)
-                        time_series("3", time, z, y, x, x_max, x_min, y_max, y_min, function)
-                        time_series("4", time, z, y, x, x_max, x_min, y_max, y_min, function)
+                        time_series("0", time, z, y, x, x_max, x_min, y_max, y_min, function)
 
                     elif function == "seis" or function == "mini":
                         time_series(channel, time, z, y, x, x_max, x_min, y_max, y_min, function)
 
 
-#---------------------------------------------------------- E Channel ---------------------------------------------------------#
+#---------------------------------------------------------- X Channel ---------------------------------------------------------#
                 elif channel == "2":
                     time_series(channel, time, z, y, x, x_max, x_min, y_max, y_min, function)
                     
 
-#---------------------------------------------------------- E Channel ---------------------------------------------------------#
+#---------------------------------------------------------- Y Channel ---------------------------------------------------------#
                 elif channel == "3":
                     time_series(channel, time, z, y, x, x_max, x_min, y_max, y_min, function)
                     
 
-#---------------------------------------------------------- E Channel ---------------------------------------------------------#
+#---------------------------------------------------------- Z Channel ---------------------------------------------------------#
                 elif channel == "4":
                     time_series(channel, time, z, y, x, x_max, x_min, y_max, y_min, function)
 
@@ -943,7 +963,7 @@ def plot_time_series(time, x, y, z, function):
 ################################################################################################################################
 #------------------------------------------------------------------------------------------------------------------------------#
 
-        elif sub_choice == "x" or sub_choice == "" or sub_choice == "2":
+        elif sub_choice == "x" or sub_choice == "":
             print("\nReturning to main menu...")
             break
         else:
@@ -1367,7 +1387,7 @@ def plot_spectrum(time, sr, x, y, z, ligo_freq, ligo_sr, ligo_x, ligo_y, ligo_z,
             
             if function == "seis":
             
-                ## E Channel
+                ## ------------------------------------- E Channel ------------------------------------- ##
                 if ligo_freq is not None:
                     asd(None, None, x, sr, ligo_freq, ligo_x, ligo_y, ligo_z, None, None, None, None, None,
                         overlap, fft_length, prom, y_min, y_max, x_min, x_max, "velocity", "east")
@@ -1375,19 +1395,19 @@ def plot_spectrum(time, sr, x, y, z, ligo_freq, ligo_sr, ligo_x, ligo_y, ligo_z,
                 elif ligo_freq is None:
                     print("LIGO data not found")
 
-                ## N Channel
+                ## ------------------------------------- N Channel ------------------------------------- ##
                 if ligo_freq is not None:
                     asd(None, y, None, sr, ligo_freq, ligo_x, ligo_y, ligo_z, None, None, None, None, None,
                         overlap, fft_length, prom, y_min, y_max, x_min, x_max, "velocity", "north")
 
-                ## Z Channel
+                ## ------------------------------------- Z Channel ------------------------------------- ##
                 if ligo_freq is not None:
                     asd(z, None, None, sr, ligo_freq, ligo_x, ligo_y, ligo_z, None, None, None, None, None,
                         overlap, fft_length, prom, y_min, y_max, x_min, x_max, "velocity", "zed")
                 
             elif function == "mag":
                 
-                ## ---------------------------------- E Channel ---------------------------------- ##
+                ## ------------------------------------- E Channel ------------------------------------- ##
                 if ligo_sr is not None:
                     asd(None, None, x, sr, None, None, None, None, ligo_sr, ligo_x, None, None, None,
                         overlap, fft_length, prom, y_min, y_max, x_min, x_max, "velocity", "east")
@@ -1395,12 +1415,12 @@ def plot_spectrum(time, sr, x, y, z, ligo_freq, ligo_sr, ligo_x, ligo_y, ligo_z,
                 elif ligo_sr is None:
                     print("LIGO data not found")
 
-                ## ---------------------------------- N Channel ---------------------------------- ##
+                ## ------------------------------------- N Channel ------------------------------------- ##
                 if ligo_sr is not None:
                     asd(None, y, None, sr, None, None, None, None, ligo_sr, None, ligo_y, None, None,
                         overlap, fft_length, prom, y_min, y_max, x_min, x_max, "velocity", "north")
 
-                ## ---------------------------------- Z Channel ---------------------------------- ##
+                ## ------------------------------------- Z Channel ------------------------------------- ##
                 if ligo_sr is not None:
                     asd(z, None, None, sr, None, None, None, None, ligo_sr, None, None, ligo_z, None,
                         overlap, fft_length, prom, y_min, y_max, x_min, x_max, "velocity", "zed")
