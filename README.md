@@ -48,4 +48,4 @@ circles = gis.content.search(
     max_items=10000
 )
 ```
-- If you have problems, feel free to shoot me an email! I would be happy to help. You know my name, so you should be able to find my email. 
+- If you have problems, feel free to shoot me an email! I would be happy to help. If you're using this code, you should know my name and you should be able to find my email address.
