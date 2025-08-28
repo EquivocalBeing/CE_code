@@ -27,6 +27,9 @@ Paste the following codeblock in your terminal to install them:
 ```
 pip install arcgis arcgis-mapping geopandas shapely pyproj pykml
 ```
+```
+conda install -c conda-forge gdal
+```
 
 ## Usage
 
