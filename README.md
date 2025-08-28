@@ -20,6 +20,7 @@ You will have to install the following libraries before running the code.
 - arcgis
 - geopandas
 - shapely
+- gdal
 - pyproj
 - pykml
 
