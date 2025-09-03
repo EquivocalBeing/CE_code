@@ -196,18 +196,18 @@ def asd(data_z, data_n, data_e, sample_rate, lf, lx, ly, lz,
     ax = plt.gca()
     plt.legend(loc = 'lower left', fontsize = 14.5, ncol = 2)
 
-    plt.title('FFT: ' + str(fft) + 's', fontsize = 18, loc = 'left',style ='italic')
-    plt.title('Overlap: ' + str(over_lap) + '%', fontsize = 18, loc = 'right',style ='italic')
-    plt.title(title, fontweight='bold', fontsize=25)
+    plt.title('FFT: ' + str(fft) + 's', fontsize = 18, loc = 'left',style = 'italic')
+    plt.title('Overlap: ' + str(over_lap) + '%', fontsize = 18, loc = 'right',style = 'italic')
+    plt.title(title, fontweight = 'bold', fontsize = 25)
     
-    plt.xlabel('Frequency [Hz]', fontweight='bold', fontsize=20)
-    plt.ylabel(ylabel, fontweight='bold', fontsize=20)
+    plt.xlabel('Frequency [Hz]', fontweight='bold', fontsize = 20)
+    plt.ylabel(ylabel, fontweight = 'bold', fontsize = 20)
 
     plt.yticks(fontsize = 20, fontweight = "bold")
-    ax.tick_params(axis='both', which='minor', labelsize=20) 
+    ax.tick_params(axis='both', which='minor', labelsize = 20) 
     
     plt.xticks(fontsize = 20, fontweight = "bold")
-    ax.tick_params(axis='both', which='minor', labelsize=20)
+    ax.tick_params(axis = 'both', which = 'minor', labelsize = 20)
     
     plt.ylim(ymin, ymax)
     plt.xlim(xmin, xmax)
