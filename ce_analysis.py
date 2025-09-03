@@ -430,29 +430,43 @@ def get_optional_float(prompt, func, ID, sensor, time,  allow_back=True):
 
         if func == "time_series":
             if ID == "x_min":
+                
                 if user_input in ["none", "", "default"]:
                     return 0
+                
                 if allow_back and user_input == "x":
                     return "BACK"
-                try:
-                    return float(user_input)
-                except ValueError:
-                    print("Invalid input. Please enter a number, 'none', or 'x'.")
-            elif ID == "x_max":
-                if user_input in ["none", "", "default"]:
-                    return time[len(time) - 1]
-                if allow_back and user_input == "x":
-                    return "BACK"
+                
                 try:
                     return float(user_input)
                 except ValueError:
                     print("Invalid input. Please enter a number, 'none', or 'x'.")
 
-            else:
+            ## ------------------------------------------------------------------------------------- ##
+
+            elif ID == "x_max":
+                
                 if user_input in ["none", "", "default"]:
-                    return None
+                    return time[len(time) - 1]
+                
                 if allow_back and user_input == "x":
                     return "BACK"
+                
+                try:
+                    return float(user_input)
+                except ValueError:
+                    print("Invalid input. Please enter a number, 'none', or 'x'.")
+
+            ## ------------------------------------------------------------------------------------- ##
+
+            else:
+
+                if user_input in ["none", "", "default"]:
+                    return None
+                
+                if allow_back and user_input == "x":
+                    return "BACK"
+                
                 try:
                     return float(user_input)
                 except ValueError:
@@ -464,53 +478,74 @@ def get_optional_float(prompt, func, ID, sensor, time,  allow_back=True):
             
         elif func == "asd":
             if ID == "fft_len":
+
                 if user_input in ["none", "", "default"]:
                     if sensor == "seis":
                         return 128
                     elif sensor == "mag":
                         return 10                    
+                
                 if allow_back and user_input == "x":
                     return "BACK"
+                
                 try:
                     return float(user_input)
                 except ValueError:
                     print("Invalid input. Please enter a number, 'none', 'default', or 'x'.")
 
+            ## ------------------------------------------------------------------------------------- ##
+
             elif ID == "overlap": 
+
                 if user_input in ["none", "", "default"]:
                     return 50
+                
                 if allow_back and user_input == "x":
                     return "BACK"
+                
                 try:
                     return float(user_input)
                 except ValueError:
                     print("Invalid input. Please enter a number, 'none', 'default', or 'x'.")
                     
+            ## ------------------------------------------------------------------------------------- ##
+
             elif ID == "my_max": 
+
                 if user_input in ["", "default"]:
                     return 10e-7
                 elif user_input in ["none"]:
                     return None
+                
                 if allow_back and user_input == "x":
                     return "BACK"
+                
                 try:
                     return float(user_input)
                 except ValueError:
                     print("Invalid input. Please enter a number, 'none', 'default', or 'x'.")
                     
+            ## ------------------------------------------------------------------------------------- ##
+
             elif ID == "my_min": 
+
                 if user_input in ["", "default"]:
                     return 10e-14
                 elif user_input in ["none"]:
                     return None
+                
                 if allow_back and user_input == "x":
                     return "BACK"
+                
                 try:
                     return float(user_input)
                 except ValueError:
                     print("Invalid input. Please enter a number, 'none', 'default', or 'x'.")
                     
+            ## ------------------------------------------------------------------------------------- ##
+
             elif ID == "y_max":
+
                 if user_input in ["", "default"]:
                     if sensor == "seis":
                         return 10e-6
@@ -518,29 +553,39 @@ def get_optional_float(prompt, func, ID, sensor, time,  allow_back=True):
                         return 10e-7
                 elif user_input in ["none"]:
                     return None
+                
                 if allow_back and user_input == "x":
                     return "BACK"
+                
                 try:
                     return float(user_input)
                 except ValueError:
                     print("Invalid input. Please enter a number, 'none', 'default', or 'x'.")
                     
+            ## ------------------------------------------------------------------------------------- ##
+
             elif ID == "y_min": 
+
                 if user_input in ["", "default"]:
                     if sensor == "seis":
                         return 50e-12
-                    if sensor == "mag":
+                    elif sensor == "mag":
                         return 10e-13
                 elif user_input in ["none"]:
                     return None
+                
                 if allow_back and user_input == "x":
                     return "BACK"
+                
                 try:
                     return float(user_input)
                 except ValueError:
                     print("Invalid input. Please enter a number, 'none', 'default', or 'x'.")
-                    
+            
+            ## ------------------------------------------------------------------------------------- ##
+
             elif ID == "x_max": 
+
                 if user_input in ["", "default"]:
                     if sensor == "seis":
                         return 100
@@ -548,6 +593,7 @@ def get_optional_float(prompt, func, ID, sensor, time,  allow_back=True):
                         return 2000
                 elif user_input in ["none"]:
                     return None
+                
                 if allow_back and user_input == "x":
                     return "BACK"
                 try:
@@ -555,7 +601,10 @@ def get_optional_float(prompt, func, ID, sensor, time,  allow_back=True):
                 except ValueError:
                     print("Invalid input. Please enter a number, 'none', 'default', or 'x'.")
                     
+            ## ------------------------------------------------------------------------------------- ##
+
             elif ID == "x_min": 
+
                 if user_input in ["", "default"]:
                     if sensor == "seis":
                         return 0.1
@@ -563,14 +612,19 @@ def get_optional_float(prompt, func, ID, sensor, time,  allow_back=True):
                         return 5e-2
                 elif user_input in ["none"]:
                     return None
+                
                 if allow_back and user_input == "x":
                     return "BACK"
+                
                 try:
                     return float(user_input)
                 except ValueError:
                     print("Invalid input. Please enter a number, 'none', 'default', or 'x'.")
                     
+            ## ------------------------------------------------------------------------------------- ##  
+            
             elif ID == "prominence": 
+
                 if user_input in ["", "default"]:
                     if sensor == "seis":
                         return 5
@@ -578,36 +632,52 @@ def get_optional_float(prompt, func, ID, sensor, time,  allow_back=True):
                         return 2.25
                 elif user_input in ["none"]:
                     return None
+                
                 if allow_back and user_input == "x":
                     return "BACK"
+                
                 try:
                     return float(user_input)
                 except ValueError:
                     print("Invalid input. Please enter a number, 'none', 'default', or 'x'.")
+
+            ## ------------------------------------------------------------------------------------- ##
 
             elif ID == "frequency": 
+
                 if allow_back and user_input == "x":
                     return "BACK"
+                
                 try:
                     return float(user_input)
                 except ValueError:
                     print("Invalid input. Please enter a number, 'none', 'default', or 'x'.")
+
+            ## ------------------------------------------------------------------------------------- ##
 
             elif ID == "start_time": 
+
                 if user_input in ["none", ""]:
-                    return 0   
+                    return 0  
+                 
                 if allow_back and user_input == "x":
                     return "BACK"
+                
                 try:
                     return float(user_input)
                 except ValueError:
                     print("Invalid input. Please enter a number, 'none', 'default', or 'x'.")
 
+            ## ------------------------------------------------------------------------------------- ##
+
             elif ID == "end_time": 
+
                 if user_input in ["none", ""]:
                     return -1   
+                
                 if allow_back and user_input == "x":
                     return "BACK"
+                
                 try:
                     return float(user_input)
                 except ValueError:
@@ -622,26 +692,37 @@ def get_optional_float(prompt, func, ID, sensor, time,  allow_back=True):
         elif func == "spectrogram":
     
             if ID == "fft_len":
+                
                 if user_input in ["none", "", "default"]:
                     return 10
+                
                 if allow_back and user_input == "x":
                     return "BACK"
+                
                 try:
                     return float(user_input)
                 except ValueError:
                     print("Invalid input. Please enter a number, 'none', 'default', or 'x'.")
         
+            ## ------------------------------------------------------------------------------------- ##
+
             elif ID == "overlap": 
+
                 if user_input in ["none", "", "default"]:
                     return 50
+                
                 if allow_back and user_input == "x":
                     return "BACK"
+                
                 try:
                     return float(user_input)
                 except ValueError:
                     print("Invalid input. Please enter a number, 'none', 'default', or 'x'.")
             
+            ## ------------------------------------------------------------------------------------- ##
+
             elif ID == "y_max": 
+                
                 if user_input in ["", "default"]:
                     if sensor == "seis":
                         return 100
@@ -649,44 +730,64 @@ def get_optional_float(prompt, func, ID, sensor, time,  allow_back=True):
                         return 200
                 elif user_input in ["none"]:
                     return None
+                
                 if allow_back and user_input == "x":
                     return "BACK"
+                
                 try:
                     return float(user_input)
                 except ValueError:
                     print("Invalid input. Please enter a number, 'none', 'default', or 'x'.")
-                    
+
+            ## ------------------------------------------------------------------------------------- ##
+
             elif ID == "y_min": 
+                
                 if user_input in ["none", "", "default"]:
                     return 0
+                
                 if allow_back and user_input == "x":
                     return "BACK"
+                
                 try:
                     return float(user_input)
                 except ValueError:
                     print("Invalid input. Please enter a number, 'none', 'default', or 'x'.")
-                    
+            
+            ## ------------------------------------------------------------------------------------- ##
+
             elif ID == "x_max": 
+                
                 if user_input in ["none", "", "default"]:
                     return time[len(time) - 1]
+                
                 if allow_back and user_input == "x":
                     return "BACK"
+                
                 try:
                     return float(user_input)
                 except ValueError:
                     print("Invalid input. Please enter a number, 'none', 'default', or 'x'.")
-                    
+
+                ## ------------------------------------------------------------------------------------- ##
+
             elif ID == "x_min": 
+
                 if user_input in ["none","", "default"]:
                     return 0
+                
                 if allow_back and user_input == "x":
                     return "BACK"
+                
                 try:
                     return float(user_input)
                 except ValueError:
                     print("Invalid input. Please enter a number, 'none', 'default', or 'x'.")
-                    
+
+            ## ------------------------------------------------------------------------------------- ##
+
             elif ID == "c_min": 
+
                 if user_input in ["", "default"]:
                     if sensor == "seis":
                         return 10e-10
@@ -694,14 +795,19 @@ def get_optional_float(prompt, func, ID, sensor, time,  allow_back=True):
                         return 10e-14
                 elif user_input in ["none"]:
                     return None
+                
                 if allow_back and user_input == "x":
                     return "BACK"
+                
                 try:
                     return float(user_input)
                 except ValueError:
                     print("Invalid input. Please enter a number, 'none', 'default', or 'x'.")
-                    
+
+            ## ------------------------------------------------------------------------------------- ##
+
             elif ID == "c_max": 
+                
                 if user_input in ["", "default"]:
                     if sensor == "seis":
                         return 10e-9
@@ -709,17 +815,23 @@ def get_optional_float(prompt, func, ID, sensor, time,  allow_back=True):
                         return 10e-10
                 elif user_input in ["none"]:
                     return None
+                
                 if allow_back and user_input == "x":
                     return "BACK"
+                
                 try:
                     return float(user_input)
                 except ValueError:
                     print("Invalid input. Please enter a number, 'none', 'default', or 'x'.")
                     
 #------------------------------------------------------------------------------------------------------------------------------#
+#------------------------------------------------------------------------------------------------------------------------------#
+#------------------------------------------------------------------------------------------------------------------------------#
 
             else:
-                print("Carlos didn't do his job properly")
+                print("\n\n----------------------------------------------------------------------------------------------------------")
+                print("----------------------------------------------------------------------------------------------------------")
+                print("\nCarlos didn't do his job properly")
       
 
 '''##########################################################################################################################'''    
@@ -827,6 +939,7 @@ def plot_time_series(time, x, y, z, function):
         plt.show()
 
     x_min = 0
+
     if function == "mini":
         x_max = time[0][len(time[0]) - 1]
     else:
@@ -1105,9 +1218,11 @@ def plot_spectrum(time, sr, x, y, z, ligo_freq, ligo_sr, ligo_x, ligo_y, ligo_z,
         '''
         def peaks(signal_freq, signal_log, frequency, signal_prom):
             tolerance = 1
+
             if frequency is None:
                 peak, _ = signal.find_peaks(signal_log,
                                               prominence = signal_prom)
+            
             else:
                 mask = (signal_freq >= frequency - tolerance) & (signal_freq <= frequency + tolerance)
                 peaks_local, _ = signal.find_peaks(signal_log[mask], prominence = signal_prom)
@@ -1355,7 +1470,7 @@ def plot_spectrum(time, sr, x, y, z, ligo_freq, ligo_sr, ligo_x, ligo_y, ligo_z,
         2: Change plot limits / FFT Parameters
         3: Look at specific times in the time series
         4: Look at a specific frequency 
-        x: Return to main menu")
+        x: Return to main menu"
         ---------------------------------------
 
         Enter your choice (1-4, x): 
@@ -1525,37 +1640,39 @@ def plot_spectrum(time, sr, x, y, z, ligo_freq, ligo_sr, ligo_x, ligo_y, ligo_z,
             freq = get_optional_float("In Hz's: ", "asd", 'frequency', None, None)
             if freq == "BACK":
                 return
+            
 
             freq_min = freq - 1
             freq_max = freq + 1
             
-            prom = 4.5
-
+            
             if function == "seis":
             
-                ## E Channel
+                ## -------------------------------------- E Channel -------------------------------------- ##
                 if ligo_freq is not None:
-                    asd(None, None, x, sr, ligo_freq, ligo_x, ligo_y, ligo_z, None, None, None, None, None,
+                    asd(None, None, x, sr, ligo_freq, ligo_x, ligo_y, ligo_z, None, None, None, None, freq,
                         overlap, fft_length, prom, y_min, y_max, freq_min, freq_max, "velocity", "east")
 
                 elif ligo_freq is None:
                     print("LIGO data not found")
 
-                ## N Channel
+                ## -------------------------------------- N Channel -------------------------------------- ##
                 if ligo_freq is not None:
-                    asd(None, y, None, sr, ligo_freq, ligo_x, ligo_y, ligo_z, None, None, None, None, None,
+                    asd(None, y, None, sr, ligo_freq, ligo_x, ligo_y, ligo_z, None, None, None, None, freq,
                         overlap, fft_length, prom, y_min, y_max, freq_min, freq_max, "velocity", "north")
 
-                ## Z Channel
+                ## -------------------------------------- Z Channel -------------------------------------- ##
                 if ligo_freq is not None:
-                    asd(z, None, None, sr, ligo_freq, ligo_x, ligo_y, ligo_z, None, None, None, None, None,
+                    asd(z, None, None, sr, ligo_freq, ligo_x, ligo_y, ligo_z, None, None, None, None, freq,
                         overlap, fft_length, prom, y_min, y_max, freq_min, freq_max, "velocity", "zed")
 
 
             if function == "mag":
                 
                 fft_length = 100 
-                ## ---------------------------------- E Channel ---------------------------------- ##
+                prom = 4.5
+
+                ## -------------------------------------- E Channel -------------------------------------- ##
                 if ligo_sr is not None:
                     asd(None, None, x, sr, None, None, None, None, ligo_sr, ligo_x, None, None, freq,
                         overlap, fft_length, prom, y_min, y_max, freq_min, freq_max, "velocity", "east")
@@ -1563,13 +1680,12 @@ def plot_spectrum(time, sr, x, y, z, ligo_freq, ligo_sr, ligo_x, ligo_y, ligo_z,
                 elif ligo_sr is None:
                     print("LIGO data not found")
 
-                
-                ## ---------------------------------- N Channel ---------------------------------- ##
+                ## -------------------------------------- N Channel -------------------------------------- ##
                 if ligo_sr is not None:
                     asd(None, y, None, sr, None, None, None, None, ligo_sr, None, ligo_y, None, freq,
                         overlap, fft_length, prom, y_min, y_max, freq_min, freq_max, "velocity", "north")
 
-                ## ---------------------------------- Z Channel ---------------------------------- ##
+                ## -------------------------------------- Z Channel -------------------------------------- ##
                 if ligo_sr is not None:
                     asd(z, None, None, sr, None, None, None, None, ligo_sr, None, None, ligo_z, freq,
                         overlap, fft_length, prom, y_min, y_max, freq_min, freq_max, "velocity", "zed")
