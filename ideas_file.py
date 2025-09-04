@@ -3,8 +3,9 @@ import matplotlib.pyplot as plt
 from scipy import signal
 import pandas as pd
 from matplotlib import gridspec
+import matplotlib.ticker as mticker
 
-path = '/ligo/home/carlos.campos/Downloads/seismo_test_cal_2024-10-01T22-07-09-752.csv'
+path = r"C:\Users\cacam\Downloads\seis_1970-08-19T12-28-38-835.csv"
 
 
 ################################################################################################################################
@@ -30,9 +31,9 @@ mag = pd.read_csv(path, skiprows=5, delimiter=',')
 samples = mag['Sample']
 times = mag['Time (s)']
 #noi = mag['Noise (V)'] * (1.222e-05)/21 
-z = mag['Channel Z (V)'] * (1.222e-05)/21 #--------------- This is the conversion factor for Volts to Tesla -------------------#
-y = mag['Channel N (V)'] * (1.222e-05)/21
-x = mag['Channel E (V)'] * (1.222e-05)/21
+z = mag['Voltage Z (V)'] * (1.222e-05)/21 #--------------- This is the conversion factor for Volts to Tesla -------------------#
+y = mag['Voltage N (V)'] * (1.222e-05)/21
+x = mag['Voltage E (V)'] * (1.222e-05)/21
 
 
 ########################################### This is the sample rate from the metadata ##########################################
@@ -85,14 +86,13 @@ def asd(data_z, data_n, data_e, sample_rate, lf, lx, ly, lz,
 
 #------------------------------------------------------------------------------------------------------------------------------#
     
-    # ---------------- Compute spectra for Z, N, E ----------------
-    input_data = {
-        'z': data_z,
-        'n': data_n,
-        'e': data_e
-    }
+    input_data = {'z': data_z,          ## Dictionary for direction and field data
+                  'n': data_n,
+                  'e': data_e}
 
-    results = {}
+    results = {}             ## Dictionary for dirct and calculations
+
+    ## ------------------------------------------------------------------------------------- ##
 
     for key, data in input_data.items():
         if data is None:
@@ -104,14 +104,13 @@ def asd(data_z, data_n, data_e, sample_rate, lf, lx, ly, lz,
         disp = amp / (2 * np.pi * signal_f) if func == 'displacement' else None
         peak_gquux = peaks(signal_f, log_amp, frequency, signal_prom)
         
-        results[key] = {
-            'frequency': signal_f,
-            'amp': amp,
-            'disp': disp,
-            'peaks': peak_gquux
-        }
+        results[key] = {'frequency': signal_f,
+                        'amp': amp,
+                        'disp': disp,
+                        'peaks': peak_gquux}
 
-    # ---------------- Compute reference (if not provided) ----------------
+    ## ------------------------------------------------------------------------------------- ##
+
     if lf is None or lx is None or ly is None or lz is None:
 
         ref_data = {'x': bart_x, 'y': bart_y, 'z': bart_z}
@@ -126,26 +125,26 @@ def asd(data_z, data_n, data_e, sample_rate, lf, lx, ly, lz,
         
         lx, ly, lz = ref_out.get('x'), ref_out.get('y'), ref_out.get('z')
 
+    ## ----------------- Dictionaries for plotting depending on direction ------------------ ##
+    
+    color_map = {'z': 'black', 
+                 'n': 'red', 
+                 'e': 'blue'}
+
+    label_map = {'z': 'Field data Z Dir', 
+                 'n': 'Field data N dir', 
+                 'e': 'Field data E dir'}
+
+    ctrl_map   = {'z': lz,
+                  'n': ly, 
+                  'e': lx}
+
+    title_map = {'z': drctn_title[2], 
+                 'n': drctn_title[1], 
+                 'e': drctn_title[0]}
+    
     ## ------------------------------------------------------------------------------------- ##
-    ## ------------------------------------------------------------------------------------- ##
-
-    # ---------------- Plotting ----------------
-    plt.figure(figsize = (20, 8))
-
-    plt.yscale('log')
-    plt.xscale('log')
-
-
-    color_map = {'z': 'black', 'n': 'red', 'e': 'blue'}
-    label_map = {'z': 'Z', 'n': 'N', 'e': 'E'}
-    ctrl_map   = {'z': lz, 'n': ly, 'e': lx}
-    title_map = {'z': drctn_title[2], 'n': drctn_title[1], 'e': drctn_title[0]}
-
-
-    ## ------------------------------------------------------------------------------------- ##
-
-    # Decide which channels to plot
-     
+         
     if func == 'velocity':
         ylabel = v_label 
         title = v_title
@@ -154,14 +153,22 @@ def asd(data_z, data_n, data_e, sample_rate, lf, lx, ly, lz,
         ylabel = s_label
         title = s_title
 
+
     if channel == 'all':
         channels_to_plot = ['z', 'n', 'e']
 
     else:
-        channels_to_plot = [channel[0]]  # 'zed' -> 'z', etc
+        channels_to_plot = [channel[0]]         ## 'zed' -> 'z', etc
         title = title_map[channels_to_plot[0]]
 
+    ## ------------------------------------------------------------------------------------- ##
+
 #------------------------------------------------------------------------------------------------------------------------------#
+#------------------------------------------------------ PLots Spectra ---------------------------------------------------------#
+    plt.figure(figsize = (20, 8))
+
+    plt.yscale('log')
+    plt.xscale('log')
 
     for ch in channels_to_plot:
         if ch not in results:
@@ -175,23 +182,23 @@ def asd(data_z, data_n, data_e, sample_rate, lf, lx, ly, lz,
         f = results[ch]['frequency']
         peaks_gquux = results[ch]['peaks']
         
-
+        ## Field Data
         plt.plot(f, y, color = color_map[ch], linewidth = 1.75, label = label_map[ch])
         
-
+        ## ctrl data
         if ctrl_map[ch] is not None:
             plt.plot(lf, ctrl_map[ch], color = 'dimgrey', linewidth = 2, alpha = 0.5, label = f'Reference {label_map[ch]}')
 
-        # Mark peaks
+        ## Signal peaks
         if len(f[peaks_gquux]) != 0:
             plt.scatter(f[peaks_gquux], y[peaks_gquux], s = 100, color = 'limegreen', marker = 'x', linewidths = 2.5)
             
             if frequency is not None:
                 print(f'{title_map[ch]}:\n{f[peaks_gquux][0]:.2f} Hz \nAmpl: {y[peaks_gquux][0]:.3e}\n')
         else:
-            print(f"No peaks in the {label_map[ch]} directions\n")
+            print(f"No peaks in the {title_map[ch]}\n")
 
-    ## ------------------------------------------------------------------------------------- ##
+    ## ----------------------------------------------------------------------------------------------------------------- ##
 
     ax = plt.gca()
     plt.legend(loc = 'lower left', fontsize = 14.5, ncol = 2)
@@ -208,6 +215,9 @@ def asd(data_z, data_n, data_e, sample_rate, lf, lx, ly, lz,
     
     plt.xticks(fontsize = 20, fontweight = "bold")
     ax.tick_params(axis = 'both', which = 'minor', labelsize = 20)
+    
+    if frequency is not None:
+        ax.xaxis.set_minor_formatter(mticker.ScalarFormatter())
     
     plt.ylim(ymin, ymax)
     plt.xlim(xmin, xmax)
