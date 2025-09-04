@@ -46,6 +46,7 @@ from matplotlib import pyplot as plt
 from scipy import signal
 from matplotlib import gridspec
 print("thinking...")
+import matplotlib.ticker as mticker
 import warnings  ## If warnings are still being printed out, just move the ignore line below whatever is causing the warning(s)
 import os
 
@@ -983,11 +984,11 @@ def plot_time_series(time, x, y, z, function):
         #print("2: Save plot to file")                   # -- Maybe later
 
         if sub_choice == "1":
+            print("\nWhat x limits do you want (You can input None)")
             x_min = get_optional_float("Lower bound [s]: ", "time_series", 'x_min', None, time)
             if x_min == "BACK":
                 return
             
-            print("\nWhat x limits do you want (You can input None)")
             x_max = get_optional_float("Upper bound [s]: ", "time_series", 'x_max', None, time)
             if x_max == "BACK":
                 return
@@ -1103,47 +1104,40 @@ def plot_spectrum(time, sr, x, y, z, ligo_freq, ligo_sr, ligo_x, ligo_y, ligo_z,
 ################################################################################################################################
 #------------------------------------------------------------------------------------------------------------------------------#
 
-    # the '_p' values are used for the spectrum menu below. These serve as the default values for the user to base their choices 
-    # on. I made them their own variables to ensure they don't change anywhere along the process; i.e. redundancy.
+    """
+    The '_p' values are used for the spectrum menu below. These serve as the default values for the user to base their choices 
+    on. I made them their own variables to ensure they don't change anywhere along the process; i.e. redundancy.
+    """
 
     if function == "seis":
     
         ## X limits
-        x_max = 100 ## in terms of frequency
-        x_min = 0.1
+        x_max = 100;        x_max_p = 100       ## in terms of frequency
+        x_min = 0.1;        x_min_p = 0.1
 
-        x_max_p = 100
-        x_min_p = 0.1
 
         ## Velocity Y limits
-        y_max = 10e-6 ## in terms of ms⁻¹/√Hz
-        y_min = 10e-13
+        y_max = 10e-6;      y_max_p = 10e-6     ## in terms of ms⁻¹/√Hz
+        y_min = 10e-13;     y_min_p = 10e-13  
 
-        y_max_p = 10e-6 
-        y_min_p = 10e-13  
 
         ## Displacement Y Limits
-        my_max = 10e-7 ## in terms of m/√Hz
-        my_min = 10e-15
-        
-        my_max_p = 10e-7
-        my_min_p = 10e-15
+        my_max = 10e-7;     my_max_p = 10e-7    ## in terms of m/√Hz
+        my_min = 10e-15;    my_min_p = 10e-15
+
 
         ## fft length
-        fft_length = 128 ## in terms of seconds
+        fft_length = 128;   fft_length_p = 128  ## in terms of seconds
 
-        fft_length_p = 128
 
         ## Precent FFT Overlap
-        overlap = 50 ## 50% fft overlap
-        
-        overlap_p = 50
+        overlap = 50;       overlap_p = 50      ## 50% fft overlap
+
 
         ## Peak Promience
-        prom = 5
+        prom = 5;           prom_p = 5
 
-        prom_p = 5
-        
+
         ## Plot labels
         v_title = "Seismic Velocity Data ASD"
         s_title = "Seismic Dispacement Data ASD"
@@ -1157,32 +1151,24 @@ def plot_spectrum(time, sr, x, y, z, ligo_freq, ligo_sr, ligo_x, ligo_y, ligo_z,
     elif function == "mag":
         
         ## Plot limits
-        y_max = 10e-8
-        y_min = 10e-13 
-
-        x_max = 2000
-        x_min = 0.01
+        x_max = 2000;      x_max_p = 2000
+        x_min = 0.01;      x_min_p = 0.01
         
-        y_max_p = 10e-8
-        y_min_p = 10e-13 
+        y_max = 10e-8;     y_max_p = 10e-8
+        y_min = 10e-13;    y_min_p = 10e-13 
 
-        x_max_p = 2000
-        x_min_p = 0.01
 
         ## fft length
-        fft_length = 10
+        fft_length = 10;   fft_length_p = 10
 
-        fft_length_p = 10
 
         ## Precent FFT Overlap
-        overlap = 50 # 50% fft overlap
-        
-        overlap_p = 50
+        overlap = 50;      overlap_p = 50
+
 
         ## Peak Promience
-        prom = 2
+        prom = 2;          prom_p = 2
 
-        prom_p = 2
 
         ## Plot labels
         v_title = "Magnetic Data ASD"
@@ -1209,220 +1195,196 @@ def plot_spectrum(time, sr, x, y, z, ligo_freq, ligo_sr, ligo_x, ligo_y, ligo_z,
     that an additional ASD has to be calculated for the control data. 
     '''
     def asd(data_z, data_n, data_e, sample_rate, lf, lx, ly, lz, bart_sample_rate, bart_x, bart_y, bart_z, frequency,
-            over_lap, fft, signal_prom, ymin, ymax, xmin, xmax, func, channel):
-
+        over_lap, fft, signal_prom, ymin, ymax, xmin, xmax, func, channel):
+    
+#------------------------------------------------------------------------------------------------------------------------------#
+    
         '''
-        The magnetometer workflow has an additional function to zoom in on a specific frequency of the user's choice. 
-        If this is choosen, the peaks are found differential. This is to make it easier to print out the amplitude of
-        the desired frequency. 
+        There are two methods of finding peaks because when looks for peaks across the entire spectrum,
+        while the other looks at one section. This section is determined by the desired frequency the
+        user wishes to look at +- 1. So, if the user wants to look at 60Hz, the range would be 59-61 Hz.
         '''
-        def peaks(signal_freq, signal_log, frequency, signal_prom):
-            tolerance = 1
-
-            if frequency is None:
-                peak, _ = signal.find_peaks(signal_log,
-                                              prominence = signal_prom)
-            
-            else:
-                mask = (signal_freq >= frequency - tolerance) & (signal_freq <= frequency + tolerance)
-                peaks_local, _ = signal.find_peaks(signal_log[mask], prominence = signal_prom)
-
-                peak = np.where(mask)[0][peaks_local]
-
-            return peak
-
-#---------------------------------------------------------- Z Channel ---------------------------------------------------------#
-
-        if data_z is not None:
-            f_z, Pxx_den_z = signal.welch(data_z, sample_rate, window= 'hamming', 
-                                          nperseg= (sample_rate *fft), noverlap= round(sample_rate *(over_lap *0.01)) )
         
-            az = np.sqrt(Pxx_den_z)
-            log_z = np.log(az)      
+        def peaks(signal_freq, signal_log, frequency, signal_prom):
+                tolerance = 1
 
-            if func == "displacement":
-                mz = az / (2* np.pi *f_z) 
-            
-            peak_z = peaks(f_z, log_z, frequency, signal_prom)
-            
-        if bart_z is not None:
-            lf, amp_z = signal.welch(bart_z, bart_sample_rate, window= 'hamming', 
-                                          nperseg= (bart_sample_rate *fft), noverlap= round(bart_sample_rate *(over_lap *0.01)))
-            lz = np.sqrt(amp_z)
-            
-#---------------------------------------------------------- N Channel ---------------------------------------------------------#
+                if frequency is None:
+                    peak, _ = signal.find_peaks(signal_log,
+                                                prominence = signal_prom)
+                
+                else:
+                    mask = (signal_freq >= frequency - tolerance) & (signal_freq <= frequency + tolerance)
+                    peaks_local, _ = signal.find_peaks(signal_log[mask], prominence = signal_prom)
 
-        if data_n is not None:
-            f_n, Pxx_den_n = signal.welch(data_n, sample_rate, window= 'hamming', 
-                                          nperseg= (sample_rate *fft), noverlap= round(sample_rate *(over_lap *0.01)) )
-            
-            an = np.sqrt(Pxx_den_n)
-            log_n = np.log(an)
-            
-            if func == "displacement":
-                mn = an / (2* np.pi *f_n)  
-            
-            peak_n = peaks(f_n, log_n, frequency, signal_prom)
+                    peak = np.where(mask)[0][peaks_local]
 
-        if bart_y is not None:
-            lf, amp_y = signal.welch(bart_y, bart_sample_rate, window= 'hamming', 
-                                          nperseg= (bart_sample_rate *fft), noverlap= round(bart_sample_rate *(over_lap *0.01)))
-            ly = np.sqrt(amp_y)
+                return peak
 
-#---------------------------------------------------------- E Channel ---------------------------------------------------------#
+#------------------------------------------------------------------------------------------------------------------------------#
 
-        if data_e is not None:
-            f_e, Pxx_den_e = signal.welch(data_e, sample_rate, window= 'hamming', 
-                                          nperseg= (sample_rate *fft), noverlap= round(sample_rate *(over_lap *0.01)) )
-            ae = np.sqrt(Pxx_den_e)
-            log_e = np.log(ae)
+        def spectrum(data, sr):
+            f, Pxx = signal.welch(data, sr, window = 'hamming',
+                                nperseg = sr * fft,
+                                noverlap = round(sr * (over_lap * 0.01)))
+                                
+            return f, np.sqrt(Pxx)
+
+#------------------------------------------------------------------------------------------------------------------------------#
+        
+        input_data = {'z': data_z,          ## Dictionary for direction and field data
+                    'n': data_n,
+                    'e': data_e}
+
+        results = {}                        ## Dictionary for dirct and calculations
+
+        ## ------------------------------------------------------------------------------------- ##
+
+        for key, data in input_data.items():
+            if data is None:
+                continue
+
+            signal_f, amp = spectrum(data, sample_rate)
+            log_amp = np.log(amp)
+
+            if func == 'displacement':
+                disp = amp / (2 * np.pi * signal_f) 
+            else: 
+                disp = None
+
+            peak_gquux = peaks(signal_f, log_amp, frequency, signal_prom)
             
-            if func == "displacement":
-                me = ae / (2* np.pi *f_e)
-            
-            peak_e = peaks(f_e, log_e, frequency, signal_prom)
-            
-        if bart_x is not None:
-            lf, amp_x = signal.welch(bart_x, bart_sample_rate, window= 'hamming', 
-                                          nperseg= (bart_sample_rate *fft), noverlap= round(bart_sample_rate *(over_lap *0.01)))
-            lx = np.sqrt(amp_x)
+            results[key] = {'frequency': signal_f,
+                            'amp': amp,
+                            'disp': disp,
+                            'peaks': peak_gquux}
 
-#------------------------------------------------------ PLots Spectra ---------------------------------------------------------#
+        ## ------------------------------------------------------------------------------------- ##
 
+        if bart_sample_rate is not None:
+
+            ref_data = {'x': bart_x, 'y': bart_y, 'z': bart_z}
+            ref_out = {}
+            
+            for key, data in ref_data.items():
+                if data is not None:
+
+                    lf, amp = spectrum(data, bart_sample_rate)
+                    ref_out[key] = amp
+            
+            lx, ly, lz = ref_out.get('x'), ref_out.get('y'), ref_out.get('z')
+
+        ## ----------------- Dictionaries for plotting depending on direction ------------------ ##
+        
+        color_map = {'z': 'black', 
+                    'n': 'red', 
+                    'e': 'blue'}
+
+        label_map = {'z': 'Field data Z Dir', 
+                    'n': 'Field data N dir', 
+                    'e': 'Field data E dir'}
+
+        ctrl_map   = {'z': lz,
+                    'n': ly, 
+                    'e': lx}
+
+        title_map = {'z': drctn_title[2], 
+                    'n': drctn_title[1], 
+                    'e': drctn_title[0]}
+        
+        ## ------------------------------------------------------------------------------------- ##
+            
+        if func == 'velocity':
+            ylabel = v_label 
+            title = v_title
+
+        else:
+            ylabel = s_label
+            title = s_title
+
+
+        if channel == 'all':
+            channels_to_plot = ['z', 'n', 'e']
+
+        else:
+            channels_to_plot = [channel[0]]         ## 'zed' -> 'z', etc
+            title = title_map[channels_to_plot[0]]
+
+        ## ------------------------------------------------------------------------------------- ##
+
+#------------------------------------------------------------------------------------------------------------------------------#
+#------------------------------------------------------ Plots Spectra ---------------------------------------------------------#
+#------------------------------------------------------------------------------------------------------------------------------#
+    
         plt.figure(figsize = (20, 8))
 
         plt.yscale('log')
         plt.xscale('log')
 
-################################################################################################################################
-#------------------------------------------------------------------------------------------------------------------------------#
+        for ch in channels_to_plot:
+            if ch not in results:
+                continue
 
-        if func == "velocity":
-            
-            if data_z is not None:
-                up = az
-            if data_n is not None:
-                north = an
-            if data_e is not None:
-                east = ae
-
-            ylabel = v_label
-            title = v_title
-            
-        elif func == "displacement":
-        
-            if data_z is not None:
-                up = mz
-            if data_n is not None:
-                north = mn
-            if data_e is not None:
-                east = me
-
-            ylabel = s_label
-            title = s_title
-            
-        else: 
-            print("Carlos didn't do his job properly")
-            
-################################################################################################################################
-#------------------------------------------------------------------------------------------------------------------------------#
-            
-        if channel == "all":
-
-            plt.plot(f_z, up, color = 'black', linewidth = 1.75, label = drctn_title[2])
-            plt.plot(f_n, north, color = 'red', linewidth = 1.75, label = drctn_title[1])
-            plt.plot(f_e, east, color = 'mediumblue', linewidth = 1.75, label = drctn_title[0])
-
-            if len(f_z[peak_z]) != 0:
-                plt.scatter(f_z[peak_z], up[peak_z], s = 100, color = 'limegreen', marker = 'x', 
-                    linewidths = 2.5, label = 'Signal Peaks')
-
-            if len(f_n[peak_n]) != 0:
-                plt.scatter(f_n[peak_n], north[peak_n], s = 100, color = 'limegreen', marker = 'x', 
-                    linewidths = 2.5)
-                
-            if len(f_e[peak_e]) != 0:
-                plt.scatter(f_e[peak_e], east[peak_e], s = 100, color = 'limegreen', marker = 'x', 
-                        linewidths = 2.5)
-
-################################################################################################################################
-#------------------------------------------------------------------------------------------------------------------------------#
-
-        elif channel == "east":
-            title = drctn_title[0]              
-            plt.plot(f_e, east, color = 'mediumblue', linewidth = 1.75, label = 'E Direction', alpha = 0.5)
-            plt.plot(lf, lx, color = "dimgrey", linewidth = 2, label = "LIGO Washington X", alpha = 0.5)
-
-            if len(f_e[peak_e]) != 0:
-                plt.scatter(f_e[peak_e], east[peak_e], s = 100, color = 'limegreen', marker = 'x', 
-                        linewidths = 2.5)
-                
-                if frequency != None:
-                    print(f"E direction:\n{f_e[peak_e][0]: .2f} Hz \nAmpl: {east[peak_e][0]: .3e}\n")
-
+            if func == 'velocity':
+                y = results[ch]['amp'] 
             else:
-                print("No peaks in the E directions\n")
-
-#------------------------------------------------------------------------------------------------------------------------------#
-
-        elif channel == "north":
-            title = drctn_title[1]
-            plt.plot(f_n, north, color = 'red', linewidth = 1.75, label = 'N Direction', alpha = 0.5)
-            plt.plot(lf, ly, color = "dimgrey", label = "LIGO Washington Y", alpha = 0.5)
-
-            if len(f_n[peak_n]) != 0:
-                plt.scatter(f_n[peak_n], north[peak_n], s = 100, color = 'limegreen', marker = 'x', 
-                    linewidths = 2.5)
+                y = results[ch]['disp']
                 
-                if frequency != None:
-                    print(f"N direction:\n{f_n[peak_n][0]: .2f} Hz \nAmpl: {north[peak_n][0]: .3e}\n")
-
-            else:
-                print("No peaks in the N directions\n")
-
-#------------------------------------------------------------------------------------------------------------------------------#
-
-        elif channel == "zed":
-            title = drctn_title[2]
-            plt.plot(f_z, up, color = 'black', linewidth = 1.75, label = 'Z Direction', alpha = 0.5)
-            plt.plot(lf, lz, color = "dimgrey", label = "LIGO Washington Z", alpha = 0.5)
+            f = results[ch]['frequency']
+            peaks_gquux = results[ch]['peaks']
             
-            if len(f_z[peak_z]) != 0:
-                plt.scatter(f_z[peak_z], up[peak_z], s = 100, color = 'limegreen', marker = 'x', 
-                    linewidths = 2.5, label = 'Signal Peaks')
+            ## Field Data
+            plt.plot(f, y, color = color_map[ch], linewidth = 1.75, label = label_map[ch])
+            
+            ## ctrl data
+            if ctrl_map[ch] is not None:
+                plt.plot(lf, ctrl_map[ch], color = 'dimgrey', linewidth = 2, alpha = 0.5, label = f'Reference {label_map[ch]}')
+
+            ## Signal peaks
+            if len(f[peaks_gquux]) != 0:
+                plt.scatter(f[peaks_gquux], y[peaks_gquux], s = 100, color = 'limegreen', marker = 'x', linewidths = 2.5)
                 
-                if frequency != None:
-                    print(f"Z direction:\n{f_z[peak_z][0]: .2f} Hz \nAmpl: {up[peak_z][0]: .3e}\n")
+                if frequency is not None:
+                    print(f'{title_map[ch]}:\n{f[peaks_gquux][0]:.2f} Hz \nAmpl: {y[peaks_gquux][0]:.3e}\n')
             else:
-                print("No peaks in the Z directions\n")
+                print(f"No peaks in the {title_map[ch]}\n")
 
+        ## ----------------------------------------------------------------------------------------------------------------- ##
 
-################################################################################################################################
-#------------------------------------------------------------------------------------------------------------------------------#
-        
         ax = plt.gca()
-        plt.legend(loc = "lower left", fontsize = 14.5, ncol = 2)
+        plt.legend(loc = 'lower left', fontsize = 14.5, ncol = 2)
 
-        plt.title('FFT: ' + str(fft) + "s", fontsize = 18, loc = "left",style ='italic')
-        plt.title("Overlap: " + str(over_lap) + "%", fontsize = 18, loc = "right",style ='italic')
-
+        plt.title('FFT: ' + str(fft) + 's', fontsize = 18, loc = 'left',style = 'italic')
+        plt.title('Overlap: ' + str(over_lap) + '%', fontsize = 18, loc = 'right',style = 'italic')
         plt.title(title, fontweight = 'bold', fontsize = 25)
-
-        plt.xlabel("Frequency [Hz]", fontweight = "bold", fontsize = 20)
-        plt.ylabel(ylabel, fontweight = "bold", fontsize = 20)
+        
+        plt.xlabel('Frequency [Hz]', fontweight='bold', fontsize = 20)
+        plt.ylabel(ylabel, fontweight = 'bold', fontsize = 20)
 
         plt.yticks(fontsize = 20, fontweight = "bold")
-        ax.tick_params(axis='both', which='minor', labelsize=20) 
+        ax.tick_params(axis='both', which='minor', labelsize = 16) 
+        for label in ax.get_yticklabels(which='minor'):
+            label.set_fontweight('bold')
+        
         
         plt.xticks(fontsize = 20, fontweight = "bold")
-        ax.tick_params(axis='both', which='minor', labelsize=20)
+        ax.tick_params(axis = 'both', which = 'minor', labelsize = 16)
+        for label in ax.get_xticklabels(which='minor'):
+            label.set_fontweight('bold')
+        
+        if frequency is not None:
+            ax.xaxis.set_minor_formatter(mticker.ScalarFormatter())
+        
+        plt.ylim(ymin, ymax)
+        plt.xlim(xmin, xmax)
 
-        plt.ylim(ymin,ymax)
-        plt.xlim(xmin,xmax)
-
-        plt.grid(True, which="both", ls="-")
+        plt.grid(True, which = 'both', ls = '-')
         plt.tight_layout()
         plt.show()
+
+
+################################################################################################################################
+#------------------------------------------------------------------------------------------------------------------------------#
+################################################################################################################################
 
 
 #----------------------------------------------------- Plots Velocity ---------------------------------------------------------#
@@ -1487,8 +1449,9 @@ def plot_spectrum(time, sr, x, y, z, ligo_freq, ligo_sr, ligo_x, ligo_y, ligo_z,
             y_max = y_max_p
             y_min = y_min_p
 
-            my_max = my_max_p
-            my_min = my_min_p
+            if function == "seis":
+                my_max = my_max_p
+                my_min = my_min_p
 
             fft_length = fft_length_p
 
@@ -1715,37 +1678,35 @@ def plot_spectrum(time, sr, x, y, z, ligo_freq, ligo_sr, ligo_x, ligo_y, ligo_z,
 
 
 
-def plot_spectrogram(sr, x, y, z, function):
+def plot_spectrogram(time, sr, x, y, z, function):
     print("\nPlotting Spectrogram...\n\nThis may take a while")
 
 ################################################################################################################################ 
 #------------------------------------------------------------------------------------------------------------------------------#
-
+    
+    """
+    The '_p' values are used for the spectgram menu below. These serve as the default values for the user to base their choices 
+    on. I made them their own variables to ensure they don't change anywhere along the process; i.e. redundancy.
+    """
+    
     if function == "seis":    
 
         ## Colorbar Limits
-        cmin = 10e-10
-        cmax = 10e-9
-
-        cmin_p = 10e-10
-        cmax_p = 10e-9
+        cmin = 10e-10;   cmin_p = 10e-10
+        cmax = 10e-9;    cmax_p = 10e-9      
 
         ## Plot limits
-        y_max = 100 ## In terms of frequency
-        y_min = 0
+        x_max = None
+        x_min = 0
 
-        y_max_p = 100
-        y_min_p = 0
+        y_max = 100;     y_max_p = 100 ## In terms of frequency
+        y_min = 0;       y_min_p = 0
 
         ## fft length 
-        fft_len = 10 ## in terms of seconds
-
-        fft_len_p = 10
+        fft_len = 10;    fft_len_p = 10 ## in terms of seconds
 
         ## Precent FFT Overlap
-        overlap = 50 ## 50% fft overlap
-
-        overlap_p = 50
+        overlap = 50;    overlap_p = 50 ## 50% fft overlap
 
 ################################################################################################################################
 #------------------------------------------------------------------------------------------------------------------------------#
@@ -1753,33 +1714,24 @@ def plot_spectrogram(sr, x, y, z, function):
     if function == "mag":
         
         ## Colorbar Limits
-        cmin = 10e-14
-        cmax = 10e-10
-
-        cmin_p = 10e-14
-        cmax_p = 10e-10
+        cmin = 10e-14;   cmin_p = 10e-14
+        cmax = 10e-10;   cmax_p = 10e-10
 
         ## Plot limits
-        y_max = 2000 ## In terms of frequency
-        y_min = 0
-
-        y_max_p = 2000
-        y_min_p = 0
+        y_max = 2000;    y_max_p = 2000 ## In terms of frequency
+        y_min = 0;       y_min_p = 0
 
         ## fft length 
-        fft_len = 10 ## in terms of seconds
+        fft_len = 10;    fft_len_p = 10 ## in terms of seconds
 
-        fft_len_p = 10
-
-        ## Precent FFT Overlap 
-        overlap = 50 ## 50% fft overlap
-    
-        overlap_p = 50 
+        ## Precent FFT Overlap
+        overlap = 50;    overlap_p = 50 ## 50% fft overlap
 
 ################################################################################################################################
+#------------------------------------------------------------------------------------------------------------------------------#
 #----------------------------# The spectrograms are calculated with signal.spectrogram from SciPy #----------------------------#
 #------------------------------------------------------------------------------------------------------------------------------#
-
+################################################################################################################################
 
     def spectrogram(data, channel, sample_rate, over_lap, fft, c_min, c_max, ymin, ymax, xmin, xmax, function):
         warnings.simplefilter('ignore')
@@ -1789,29 +1741,17 @@ def plot_spectrogram(sr, x, y, z, function):
 
 #------------------------------------------------------------------------------------------------------------------------------#
 
-        if function == "seis":
-            cbar_units = 'Intensity [ms⁻¹/√Hz]'
-            
-            if channel == "z":
-                title = "Z Direction"
-            elif channel == "x":
-                title = "E Direction"
-            elif channel == "y":
-                title = "N Direction"
-            else:
-                print("Carlos didn't do his job properly")
+        channel_titles = {
+            "seis": {"x": "E Direction", "y": "N Direction", "z": "Z Direction"},
+            "mag":  {"x": "X Direction", "y": "Y Direction", "z": "Z Direction"}
+        }
+        cbar_units_map = {
+            "seis": "Intensity [ms⁻¹/√Hz]",
+            "mag":  "Intensity [T/√Hz]"
+        }
 
-        elif function == "mag":
-            cbar_units = 'Intensity [T/√Hz]'
-            
-            if channel == "z":
-                title = "Z Direction"
-            elif channel == "x":
-                title = "X Direction"
-            elif channel == "y":
-                title = "Y Direction"
-            else:
-                print("Carlos didn't do his job properly")
+        title = channel_titles.get(function, {}).get(channel, "Channel")
+        cbar_units = cbar_units_map.get(function, "Intensity")
                 
 #------------------------------------------------------------------------------------------------------------------------------#
 
@@ -1841,20 +1781,31 @@ def plot_spectrogram(sr, x, y, z, function):
         plt.tight_layout()
         plt.show()
 
-
-#---------------------------------------------------------- E Channel ---------------------------------------------------------#
-    spectrogram(x, "x", sr, overlap, fft_len, cmin, cmax, y_min, y_max, None, None, function)
-    
-#---------------------------------------------------------- N Channel ---------------------------------------------------------#
-    spectrogram(y, "y", sr, overlap, fft_len, cmin, cmax, y_min, y_max, None, None, function)
-    
-#---------------------------------------------------------- Z Channel ---------------------------------------------------------#
-    spectrogram(z, "z", sr, overlap, fft_len, cmin, cmax, y_min, y_max, None, None, function)
-
-    
 ################################################################################################################################
 #------------------------------------------------------------------------------------------------------------------------------#
 ################################################################################################################################
+
+
+
+#---------------------------------------------------------- E Channel ---------------------------------------------------------#
+
+    spectrogram(x, "x", sr, overlap, fft_len, cmin, cmax, y_min, y_max, None, None, function)
+    print(x/sr)
+    print(time[len(time)-1])
+    
+#---------------------------------------------------------- N Channel ---------------------------------------------------------#
+
+    spectrogram(y, "y", sr, overlap, fft_len, cmin, cmax, y_min, y_max, None, None, function)
+    
+#---------------------------------------------------------- Z Channel ---------------------------------------------------------#
+
+    spectrogram(z, "z", sr, overlap, fft_len, cmin, cmax, y_min, y_max, None, None, function)
+
+
+
+################################################################################################################################
+#------------------------------------------------------------------------------------------------------------------------------#
+
     
     while True:
         print("\n\n----------------------------------------------------------------------------------------------------------")
@@ -1894,11 +1845,13 @@ def plot_spectrogram(sr, x, y, z, function):
         elif sub_choice == "1":
             
             print("\nWhat x limits do you want (You can input None)")
-            x_min = get_optional_float("Lower bound: ", "spectrogram", "x_min", function, None)
+            x_min = get_optional_float("Lower bound: ", "spectrogram", "x_min", function, time)
+            print(x_min)
             if x_min == "BACK":
                 return
 
-            x_max = get_optional_float("Upper bound: ", "spectrogram", "x_max", function, None)
+            x_max = get_optional_float("Upper bound: ", "spectrogram", "x_max", function, time)
+            print(x_max)
             if x_max == "BACK":
                 return
                   
@@ -2020,7 +1973,7 @@ def main_menu():
                         plot_spectrum(time, sr, x, y, z, None, ligo_sr, ligo_x, ligo_y, ligo_z, function)
                     
                 elif sub_choice == "3":
-                    plot_spectrogram(sr, x, y, z, function)
+                    plot_spectrogram(time, sr, x, y, z, function)
 
                 elif sub_choice == "x" or sub_choice == "":
                     print("\nReturning to sensor menu...")
@@ -2080,7 +2033,7 @@ def main_menu():
                                 plot_spectrum(time, sr, x, y, z, ligo_freq, None, ligo_x, ligo_y, ligo_z, function)
 
                         elif sub_choice == "3":
-                            plot_spectrogram(sr, x, y, z, function)
+                            plot_spectrogram(time, sr, x, y, z, function)
 
                         elif sub_choice == "x" or sub_choice == "":
                             print("\nReturning to seismometer menu...")
@@ -2131,7 +2084,7 @@ def main_menu():
 
                         elif sub_choice == "3":
                             function = "seis"
-                            plot_spectrogram(sr, x, y, z, function)
+                            plot_spectrogram(time, sr, x, y, z, function)
 
                         elif sub_choice == "x" or sub_choice == "":
                             print("\nReturning to seismometer menu...")
