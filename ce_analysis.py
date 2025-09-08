@@ -760,7 +760,7 @@ def get_optional_float(prompt, func, ID, sensor, time,  allow_back=True):
             elif ID == "x_max": 
                 
                 if user_input in ["none", "", "default"]:
-                    return time[len(time) - 1]
+                    return None
                 
                 if allow_back and user_input == "x":
                     return "BACK"
@@ -775,7 +775,7 @@ def get_optional_float(prompt, func, ID, sensor, time,  allow_back=True):
             elif ID == "x_min": 
 
                 if user_input in ["none","", "default"]:
-                    return 0
+                    return None
                 
                 if allow_back and user_input == "x":
                     return "BACK"
@@ -1718,6 +1718,10 @@ def plot_spectrogram(time, sr, x, y, z, function):
         cmax = 10e-10;   cmax_p = 10e-10
 
         ## Plot limits
+
+        x_max = None
+        x_min = None
+
         y_max = 2000;    y_max_p = 2000 ## In terms of frequency
         y_min = 0;       y_min_p = 0
 
@@ -1743,12 +1747,11 @@ def plot_spectrogram(time, sr, x, y, z, function):
 
         channel_titles = {
             "seis": {"x": "E Direction", "y": "N Direction", "z": "Z Direction"},
-            "mag":  {"x": "X Direction", "y": "Y Direction", "z": "Z Direction"}
-        }
+            "mag":  {"x": "X Direction", "y": "Y Direction", "z": "Z Direction"}}
+        
         cbar_units_map = {
             "seis": "Intensity [ms⁻¹/√Hz]",
-            "mag":  "Intensity [T/√Hz]"
-        }
+            "mag":  "Intensity [T/√Hz]"}
 
         title = channel_titles.get(function, {}).get(channel, "Channel")
         cbar_units = cbar_units_map.get(function, "Intensity")
@@ -1776,6 +1779,12 @@ def plot_spectrogram(time, sr, x, y, z, function):
         cbar0.set_label(label= cbar_units ,weight='bold', fontsize = 16)
         cbar0.ax.yaxis.offsetText.set_fontsize(14)
 
+        if xmin == None or xmin < t[0]:
+            xmin = t[0]
+
+        if xmax == None or xmax < t[-1]:
+            xmax = t[-1]
+        
         axis1.set_ylim(ymin,ymax) ## Uncomment to set limits
         axis1.set_xlim(xmin,xmax)
         plt.tight_layout()
@@ -1790,8 +1799,6 @@ def plot_spectrogram(time, sr, x, y, z, function):
 #---------------------------------------------------------- E Channel ---------------------------------------------------------#
 
     spectrogram(x, "x", sr, overlap, fft_len, cmin, cmax, y_min, y_max, None, None, function)
-    print(x/sr)
-    print(time[len(time)-1])
     
 #---------------------------------------------------------- N Channel ---------------------------------------------------------#
 
@@ -1815,19 +1822,20 @@ def plot_spectrogram(time, sr, x, y, z, function):
         ---------------------------------------
         -- Spectrogram Options --
         0: Reset plot / FFT Parameters
-        1: Change plot limits / FFT Parameters
+        1: Replot spectrogram
+        2: Change plot limits / FFT Parameters
         x: Return to main menu
         ---------------------------------------
         '''
 
-        sub_choice = input("\n\n---------------------------------------\n-- Spectrogram Options --\n0: Reset plot / FFT Parameters\n1: Change plot limits / FFT Parameters\nx: Return to main menu\n---------------------------------------\n\nEnter your choice (0-1, x): ")
+        sub_choice = input("\n\n---------------------------------------\n-- Spectrogram Options --\n0: Reset plot / FFT Parameters\n1: Replot spectrogram\n2: Change plot limits / FFT Parameters\nx: Return to main menu\n---------------------------------------\n\nEnter your choice (0-1, x): ")
         
 #------------------------------------------------------------------------------------------------------------------------------#            
 
         if sub_choice == "0":
 
             x_max = None
-            x_min = 0
+            x_min = None
 
             y_max = y_max_p
             y_min = y_min_p
@@ -1842,16 +1850,32 @@ def plot_spectrogram(time, sr, x, y, z, function):
 
             print("\n\nPlot limits and FFT parameters reset")
 
+#------------------------------------------------------------------------------------------------------------------------------# 
+
         elif sub_choice == "1":
             
+            ## -------------------------------------- E Channel -------------------------------------- ##
+
+            spectrogram(x, "x", sr, overlap, fft_len, cmin, cmax, y_min, y_max, x_min, x_max, function)
+    
+            ## -------------------------------------- N Channel -------------------------------------- ##
+            
+            spectrogram(y, "y", sr, overlap, fft_len, cmin, cmax, y_min, y_max, x_min, x_max, function)
+    
+            ## -------------------------------------- Z Channel -------------------------------------- ##
+            
+            spectrogram(z, "z", sr, overlap, fft_len,  cmin, cmax, y_min, y_max, x_min, x_max, function)
+
+#------------------------------------------------------------------------------------------------------------------------------# 
+
+        elif sub_choice == "2":
+            
             print("\nWhat x limits do you want (You can input None)")
-            x_min = get_optional_float("Lower bound: ", "spectrogram", "x_min", function, time)
-            print(x_min)
+            x_min = get_optional_float("Lower bound: ", "spectrogram", "x_min", function, None)
             if x_min == "BACK":
                 return
 
-            x_max = get_optional_float("Upper bound: ", "spectrogram", "x_max", function, time)
-            print(x_max)
+            x_max = get_optional_float("Upper bound: ", "spectrogram", "x_max", function, None)
             if x_max == "BACK":
                 return
                   
@@ -1891,16 +1915,21 @@ def plot_spectrogram(time, sr, x, y, z, function):
             print("Replotting Spectrogram...\n\nThis may take a while")
             
             
-#---------------------------------------------------------- E Channel ---------------------------------------------------------#
+
+            ## -------------------------------------- E Channel -------------------------------------- ##
+
             spectrogram(x, "x", sr, overlap, fft_len, cmin, cmax, y_min, y_max, x_min, x_max, function)
     
-#---------------------------------------------------------- N Channel ---------------------------------------------------------#
+            ## -------------------------------------- N Channel -------------------------------------- ##
+            
             spectrogram(y, "y", sr, overlap, fft_len, cmin, cmax, y_min, y_max, x_min, x_max, function)
     
-#---------------------------------------------------------- Z Channel ---------------------------------------------------------#
+            ## -------------------------------------- Z Channel -------------------------------------- ##
+            
             spectrogram(z, "z", sr, overlap, fft_len,  cmin, cmax, y_min, y_max, x_min, x_max, function)
 
     
+
 #------------------------------------------------------------------------------------------------------------------------------#
 #------------------------------------------------------------------------------------------------------------------------------#
 
