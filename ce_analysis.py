@@ -207,6 +207,8 @@ def csv_upload(function):  ## Function to upload CSV files from the WebDAQ
     else:
         print("Control data not found\n")
         
+
+
     
 '''##########################################################################################################################'''
 '''##########################################################################################################################'''
@@ -219,6 +221,9 @@ def csv_upload(function):  ## Function to upload CSV files from the WebDAQ
 
 '''##########################################################################################################################'''
 '''##########################################################################################################################'''
+
+
+
 
 file_paths_global = []
 
@@ -390,6 +395,8 @@ def mseed_upload():  ## function to upload miniseed files from the Minimus
     
     return e, n, z, time_e, time_n, time_z, sr, hx, hy, hz, hf
 
+
+
     
 '''##########################################################################################################################'''
 '''##########################################################################################################################'''
@@ -404,436 +411,127 @@ def mseed_upload():  ## function to upload miniseed files from the Minimus
 '''##########################################################################################################################'''
 
 
-def get_optional_float(prompt, func, ID, sensor, time,  allow_back=True):
 
 
-    '''
-    This is a function to make sure that the code doesn't crash if the user(s)
-    inputs a value or string that will cause an error.
+def get_optional_float(prompt, func, ID, sensor, time, allow_back=True):
+    """
+    Unified input validator for numeric parameters in different analysis functions.
+    - Handles 'none', 'default', and 'x' for back navigation
+    - Applies sensor-specific defaults
+    - Ensures invalid input doesn’t crash the program
+    """
 
-    If the user inputs one of these values, the function will tell them the
-    input is invalid and what is allowed
+    if sensor == "mini":  # normalize alias
+        sensor = "seis"
 
-    Each function has it's own set of paramaters. These parameter return 
-    different values depending on the user input and sensor selected
-    '''
+    # --------------------------------------------------------------------------
+    # Rule dictionary (trimmed for clarity — you’d fill in all your IDs)
+    # --------------------------------------------------------------------------
+    rules = {
+        "time_series": {
+            "x_min": {
+                "default": 0
+            },
+            "x_max": {
+                "default": lambda time: time[-1]
+            },
+            "generic": {
+                "default": None
+            }
+        },
+
+        "asd": {
+            "fft_len": {
+                "default": {"seis": 128, "mag": 10}
+            },
+            "overlap": {
+                "default": 50
+            },
+            "my_max": {
+                "default": 1e-7,
+                "none": None   # here, "none" is different from "default"
+            },
+            "my_min": {
+                "default": 1e-14,
+                "none": None
+            },
+            "y_max": {"default": {"seis": 1e-6, 
+                                  "mag": 1e-7}},
+                                  
+            "y_min": {"default": {"seis": 5e-11, 
+                                  "mag": 1e-13}},
+
+            "x_max": {"default": {"seis": 100, 
+                                  "mag": 2000},
+                      "none": None},
+
+            "x_min": {"default": {"seis": 0.1, 
+                                  "mag": 0.05},
+                      "none": None
+            },
+            "prominence": {"default": {"seis": 5, 
+                                       "mag": 2.25},
+                            "none": None},
+                            
+            "frequency": {}
+        },
+
+        "spectrogram": {
+            "fft_len": {"default": 10},
+
+            "overlap": {"default": 50},
+
+            "y_max": {"default": {"seis": 100, 
+                                  "mag": 2000}},
+                                  
+            "y_min": {"default": 0},
+
+            "x_max": {"default": None},
+            
+            "x_min": {"default": None},
+
+            "c_min": {"default": {"seis": 1e-9, "mag": 1e-13}},
+            "c_max": {"default": {"seis": 1e-8, "mag": 1e-9}}}
+    }
+
+
+#------------------------------------------------------------------------------------------------------------------------------#
+#------------------------------------------------------------------------------------------------------------------------------#
 
 
     while True:
         user_input = input(prompt).strip().lower()
 
-        if sensor == "mini":
-            sensor = "seis"
-    
-################################################################################################################################
-#------------------------------------------------------------------------------------------------------------------------------#
-################################################################################################################################
+        if allow_back and user_input == "x":
+            return "BACK"
 
-        if func == "time_series":
-            if ID == "x_min":
-                
-                if user_input in ["none", "", "default"]:
-                    return 0
-                
-                if allow_back and user_input == "x":
-                    return "BACK"
-                
-                try:
-                    return float(user_input)
-                except ValueError:
-                    print("Invalid input. Please enter a number, 'none', or 'x'.")
+        # Pick rule set for this func+ID
+        param_rules = rules.get(func, {}).get(ID, rules.get(func, {}).get("generic", {}))
 
-            ## ------------------------------------------------------------------------------------- ##
+        # Handle default/none
+        if user_input in ["none", "", "default"]:
+            val = param_rules.get(user_input) or param_rules.get("default")
 
-            elif ID == "x_max":
-                
-                if user_input in ["none", "", "default"]:
-                    return time[len(time) - 1]
-                
-                if allow_back and user_input == "x":
-                    return "BACK"
-                
-                try:
-                    return float(user_input)
-                except ValueError:
-                    print("Invalid input. Please enter a number, 'none', or 'x'.")
-
-            ## ------------------------------------------------------------------------------------- ##
-
+            if callable(val):
+                return val(time)  # e.g. lambda using time
+            elif isinstance(val, dict):
+                return val.get(sensor)
             else:
+                return val
 
-                if user_input in ["none", "", "default"]:
-                    return None
-                
-                if allow_back and user_input == "x":
-                    return "BACK"
-                
-                try:
-                    return float(user_input)
-                except ValueError:
-                    print("Invalid input. Please enter a number, 'none', or 'x'.")
+        # Otherwise, must be numeric
+        try:
+            return float(user_input)
+        except ValueError:
+            print("Invalid input. Please enter a number, 'none', 'default', or 'x'.")
 
-################################################################################################################################
-#------------------------------------------------------------------------------------------------------------------------------#
-################################################################################################################################
-            
-        elif func == "asd":
-            if ID == "fft_len":
-
-                if user_input in ["none", "", "default"]:
-                    if sensor == "seis":
-                        return 128
-                    elif sensor == "mag":
-                        return 10                    
-                
-                if allow_back and user_input == "x":
-                    return "BACK"
-                
-                try:
-                    return float(user_input)
-                except ValueError:
-                    print("Invalid input. Please enter a number, 'none', 'default', or 'x'.")
-
-            ## ------------------------------------------------------------------------------------- ##
-
-            elif ID == "overlap": 
-
-                if user_input in ["none", "", "default"]:
-                    return 50
-                
-                if allow_back and user_input == "x":
-                    return "BACK"
-                
-                try:
-                    return float(user_input)
-                except ValueError:
-                    print("Invalid input. Please enter a number, 'none', 'default', or 'x'.")
                     
-            ## ------------------------------------------------------------------------------------- ##
-
-            elif ID == "my_max": 
-
-                if user_input in ["", "default"]:
-                    return 10e-7
-                elif user_input in ["none"]:
-                    return None
-                
-                if allow_back and user_input == "x":
-                    return "BACK"
-                
-                try:
-                    return float(user_input)
-                except ValueError:
-                    print("Invalid input. Please enter a number, 'none', 'default', or 'x'.")
-                    
-            ## ------------------------------------------------------------------------------------- ##
-
-            elif ID == "my_min": 
-
-                if user_input in ["", "default"]:
-                    return 10e-14
-                elif user_input in ["none"]:
-                    return None
-                
-                if allow_back and user_input == "x":
-                    return "BACK"
-                
-                try:
-                    return float(user_input)
-                except ValueError:
-                    print("Invalid input. Please enter a number, 'none', 'default', or 'x'.")
-                    
-            ## ------------------------------------------------------------------------------------- ##
-
-            elif ID == "y_max":
-
-                if user_input in ["", "default"]:
-                    if sensor == "seis":
-                        return 10e-6
-                    elif sensor == "mag":
-                        return 10e-7
-                elif user_input in ["none"]:
-                    return None
-                
-                if allow_back and user_input == "x":
-                    return "BACK"
-                
-                try:
-                    return float(user_input)
-                except ValueError:
-                    print("Invalid input. Please enter a number, 'none', 'default', or 'x'.")
-                    
-            ## ------------------------------------------------------------------------------------- ##
-
-            elif ID == "y_min": 
-
-                if user_input in ["", "default"]:
-                    if sensor == "seis":
-                        return 50e-12
-                    elif sensor == "mag":
-                        return 10e-13
-                elif user_input in ["none"]:
-                    return None
-                
-                if allow_back and user_input == "x":
-                    return "BACK"
-                
-                try:
-                    return float(user_input)
-                except ValueError:
-                    print("Invalid input. Please enter a number, 'none', 'default', or 'x'.")
-            
-            ## ------------------------------------------------------------------------------------- ##
-
-            elif ID == "x_max": 
-
-                if user_input in ["", "default"]:
-                    if sensor == "seis":
-                        return 100
-                    elif sensor == "mag":
-                        return 2000
-                elif user_input in ["none"]:
-                    return None
-                
-                if allow_back and user_input == "x":
-                    return "BACK"
-                try:
-                    return float(user_input)
-                except ValueError:
-                    print("Invalid input. Please enter a number, 'none', 'default', or 'x'.")
-                    
-            ## ------------------------------------------------------------------------------------- ##
-
-            elif ID == "x_min": 
-
-                if user_input in ["", "default"]:
-                    if sensor == "seis":
-                        return 0.1
-                    elif sensor == "mag":
-                        return 5e-2
-                elif user_input in ["none"]:
-                    return None
-                
-                if allow_back and user_input == "x":
-                    return "BACK"
-                
-                try:
-                    return float(user_input)
-                except ValueError:
-                    print("Invalid input. Please enter a number, 'none', 'default', or 'x'.")
-                    
-            ## ------------------------------------------------------------------------------------- ##  
-            
-            elif ID == "prominence": 
-
-                if user_input in ["", "default"]:
-                    if sensor == "seis":
-                        return 5
-                    elif sensor == "mag":
-                        return 2.25
-                elif user_input in ["none"]:
-                    return None
-                
-                if allow_back and user_input == "x":
-                    return "BACK"
-                
-                try:
-                    return float(user_input)
-                except ValueError:
-                    print("Invalid input. Please enter a number, 'none', 'default', or 'x'.")
-
-            ## ------------------------------------------------------------------------------------- ##
-
-            elif ID == "frequency": 
-
-                if allow_back and user_input == "x":
-                    return "BACK"
-                
-                try:
-                    return float(user_input)
-                except ValueError:
-                    print("Invalid input. Please enter a number, 'none', 'default', or 'x'.")
-
-            ## ------------------------------------------------------------------------------------- ##
-
-            elif ID == "start_time": 
-
-                if user_input in ["none", ""]:
-                    return 0  
-                 
-                if allow_back and user_input == "x":
-                    return "BACK"
-                
-                try:
-                    return float(user_input)
-                except ValueError:
-                    print("Invalid input. Please enter a number, 'none', 'default', or 'x'.")
-
-            ## ------------------------------------------------------------------------------------- ##
-
-            elif ID == "end_time": 
-
-                if user_input in ["none", ""]:
-                    return -1   
-                
-                if allow_back and user_input == "x":
-                    return "BACK"
-                
-                try:
-                    return float(user_input)
-                except ValueError:
-                    print("Invalid input. Please enter a number, 'none', 'default', or 'x'.")
-
-
-################################################################################################################################
 #------------------------------------------------------------------------------------------------------------------------------#
 ################################################################################################################################
 
 
-        elif func == "spectrogram":
-    
-            if ID == "fft_len":
-                
-                if user_input in ["none", "", "default"]:
-                    return 10
-                
-                if allow_back and user_input == "x":
-                    return "BACK"
-                
-                try:
-                    return float(user_input)
-                except ValueError:
-                    print("Invalid input. Please enter a number, 'none', 'default', or 'x'.")
-        
-            ## ------------------------------------------------------------------------------------- ##
 
-            elif ID == "overlap": 
 
-                if user_input in ["none", "", "default"]:
-                    return 50
-                
-                if allow_back and user_input == "x":
-                    return "BACK"
-                
-                try:
-                    return float(user_input)
-                except ValueError:
-                    print("Invalid input. Please enter a number, 'none', 'default', or 'x'.")
-            
-            ## ------------------------------------------------------------------------------------- ##
-
-            elif ID == "y_max": 
-                
-                if user_input in ["", "default"]:
-                    if sensor == "seis":
-                        return 100
-                    elif sensor == "mag":
-                        return 200
-                elif user_input in ["none"]:
-                    return None
-                
-                if allow_back and user_input == "x":
-                    return "BACK"
-                
-                try:
-                    return float(user_input)
-                except ValueError:
-                    print("Invalid input. Please enter a number, 'none', 'default', or 'x'.")
-
-            ## ------------------------------------------------------------------------------------- ##
-
-            elif ID == "y_min": 
-                
-                if user_input in ["none", "", "default"]:
-                    return 0
-                
-                if allow_back and user_input == "x":
-                    return "BACK"
-                
-                try:
-                    return float(user_input)
-                except ValueError:
-                    print("Invalid input. Please enter a number, 'none', 'default', or 'x'.")
-            
-            ## ------------------------------------------------------------------------------------- ##
-
-            elif ID == "x_max": 
-                
-                if user_input in ["none", "", "default"]:
-                    return None
-                
-                if allow_back and user_input == "x":
-                    return "BACK"
-                
-                try:
-                    return float(user_input)
-                except ValueError:
-                    print("Invalid input. Please enter a number, 'none', 'default', or 'x'.")
-
-                ## ------------------------------------------------------------------------------------- ##
-
-            elif ID == "x_min": 
-
-                if user_input in ["none","", "default"]:
-                    return None
-                
-                if allow_back and user_input == "x":
-                    return "BACK"
-                
-                try:
-                    return float(user_input)
-                except ValueError:
-                    print("Invalid input. Please enter a number, 'none', 'default', or 'x'.")
-
-            ## ------------------------------------------------------------------------------------- ##
-
-            elif ID == "c_min": 
-
-                if user_input in ["", "default"]:
-                    if sensor == "seis":
-                        return 10e-10
-                    elif sensor == "mag":
-                        return 10e-14
-                elif user_input in ["none"]:
-                    return None
-                
-                if allow_back and user_input == "x":
-                    return "BACK"
-                
-                try:
-                    return float(user_input)
-                except ValueError:
-                    print("Invalid input. Please enter a number, 'none', 'default', or 'x'.")
-
-            ## ------------------------------------------------------------------------------------- ##
-
-            elif ID == "c_max": 
-                
-                if user_input in ["", "default"]:
-                    if sensor == "seis":
-                        return 10e-9
-                    elif sensor == "mag":
-                        return 10e-10
-                elif user_input in ["none"]:
-                    return None
-                
-                if allow_back and user_input == "x":
-                    return "BACK"
-                
-                try:
-                    return float(user_input)
-                except ValueError:
-                    print("Invalid input. Please enter a number, 'none', 'default', or 'x'.")
-                    
-#------------------------------------------------------------------------------------------------------------------------------#
-#------------------------------------------------------------------------------------------------------------------------------#
-#------------------------------------------------------------------------------------------------------------------------------#
-
-            else:
-                print("\n\n----------------------------------------------------------------------------------------------------------")
-                print("----------------------------------------------------------------------------------------------------------")
-                print("\nCarlos didn't do his job properly")
-      
 
 '''##########################################################################################################################'''    
 '''##########################################################################################################################'''
@@ -846,6 +544,8 @@ def get_optional_float(prompt, func, ID, sensor, time,  allow_back=True):
 
 '''##########################################################################################################################'''
 '''##########################################################################################################################'''
+
+
 
 
 def plot_time_series(time, x, y, z, function):
@@ -1082,7 +782,8 @@ def plot_time_series(time, x, y, z, function):
             break
         else:
             print("\nInvalid input. Try again.")    
-            
+
+
             
             
 '''##########################################################################################################################'''            
@@ -1098,82 +799,12 @@ def plot_time_series(time, x, y, z, function):
 '''##########################################################################################################################'''
 
 
+
+
 def plot_spectrum(time, sr, x, y, z, ligo_freq, ligo_sr, ligo_x, ligo_y, ligo_z, function):
     print("Plotting Spectrum...")
     
-################################################################################################################################
-#------------------------------------------------------------------------------------------------------------------------------#
 
-    """
-    The '_p' values are used for the spectrum menu below. These serve as the default values for the user to base their choices 
-    on. I made them their own variables to ensure they don't change anywhere along the process; i.e. redundancy.
-    """
-
-    if function == "seis":
-    
-        ## X limits
-        x_max = 100;        x_max_p = 100       ## in terms of frequency
-        x_min = 0.1;        x_min_p = 0.1
-
-
-        ## Velocity Y limits
-        y_max = 10e-6;      y_max_p = 10e-6     ## in terms of ms⁻¹/√Hz
-        y_min = 10e-13;     y_min_p = 10e-13  
-
-
-        ## Displacement Y Limits
-        my_max = 10e-7;     my_max_p = 10e-7    ## in terms of m/√Hz
-        my_min = 10e-15;    my_min_p = 10e-15
-
-
-        ## fft length
-        fft_length = 128;   fft_length_p = 128  ## in terms of seconds
-
-
-        ## Precent FFT Overlap
-        overlap = 50;       overlap_p = 50      ## 50% fft overlap
-
-
-        ## Peak Promience
-        prom = 5;           prom_p = 5
-
-
-        ## Plot labels
-        v_title = "Seismic Velocity Data ASD"
-        s_title = "Seismic Dispacement Data ASD"
-        drctn_title = ["E Direction", "N Direction", "Z Direction"]
-        v_label = "Amplitude [ms⁻¹/√Hz]"
-        s_label = "Amplitude [m/√Hz]"
-
-################################################################################################################################
-#------------------------------------------------------------------------------------------------------------------------------#
-
-    elif function == "mag":
-        
-        ## Plot limits
-        x_max = 2000;      x_max_p = 2000
-        x_min = 0.01;      x_min_p = 0.01
-        
-        y_max = 10e-8;     y_max_p = 10e-8
-        y_min = 10e-13;    y_min_p = 10e-13 
-
-
-        ## fft length
-        fft_length = 10;   fft_length_p = 10
-
-
-        ## Precent FFT Overlap
-        overlap = 50;      overlap_p = 50
-
-
-        ## Peak Promience
-        prom = 2;          prom_p = 2
-
-
-        ## Plot labels
-        v_title = "Magnetic Data ASD"
-        drctn_title = ["X Direction", "Y Direction", "Z Direction"]
-        v_label = "Amplitude [T/√Hz]"
     
     
 ################################################################################################################################
@@ -1387,6 +1018,70 @@ def plot_spectrum(time, sr, x, y, z, ligo_freq, ligo_sr, ligo_x, ligo_y, ligo_z,
 ################################################################################################################################
 
 
+################################################################################################################################
+#------------------------------------------------------------------------------------------------------------------------------#
+
+    """
+    The '_p' values are used for the spectrum menu below. These serve as the default values for the user to base their choices 
+    on. I made them their own variables to ensure they don't change anywhere along the process; i.e. redundancy.
+    """
+
+    if function == "seis":
+    
+        ## Velocity Y limits  [ms⁻¹/√Hz]:             ## X limits  [Hz]:
+        y_max = 10e-6;        y_max_p = 10e-6;        x_max = 100;        x_max_p = 100;    
+        y_min = 10e-13;       y_min_p = 10e-1;        x_min = 0.1;        x_min_p = 0.1
+        
+
+
+        ## Displacement Y Limits  [m/√Hz]:
+        my_max = 10e-7;     my_max_p = 10e-7  
+        my_min = 10e-15;    my_min_p = 10e-15
+
+
+
+        ## fft length  [s]:                           ## Precent FFT Overlap  [%]:
+        fft_length = 128;   fft_length_p = 128;       overlap = 50;       overlap_p = 50      ## 50% fft overlap
+
+
+
+        ## Peak Promience
+        prom = 5;           prom_p = 5
+
+
+        ## Plot labels
+        v_title = "Seismic Velocity Data ASD"
+        s_title = "Seismic Dispacement Data ASD"
+        drctn_title = ["E Direction", "N Direction", "Z Direction"]
+        v_label = "Amplitude [ms⁻¹/√Hz]"
+        s_label = "Amplitude [m/√Hz]"
+
+################################################################################################################################
+#------------------------------------------------------------------------------------------------------------------------------#
+
+    elif function == "mag":
+        
+        ## X limits  [Hz]:                            ## FFT length:
+        x_max = 2000;        x_max_p = 2000;          fft_length = 10;        fft_length_p = 10
+        x_min = 0.01;        x_min_p = 0.01
+         
+        y_max = 10e-8;       y_max_p = 10e-8
+        y_min = 10e-13;      y_min_p = 10e-13 
+
+
+
+        ## Precent FFT Overla                       ## Peak Promience
+        overlap = 50;      overlap_p = 50;          prom = 2;                prom_p = 2
+
+
+
+        ## Plot labels
+        v_title = "Magnetic Data ASD"
+        drctn_title = ["X Direction", "Y Direction", "Z Direction"]
+        v_label = "Amplitude [T/√Hz]"
+
+
+################################################################################################################################
 #----------------------------------------------------- Plots Velocity ---------------------------------------------------------#
     asd(z, y, x, sr, None, None, None, None, None, None, None, None, None,
         overlap, fft_length, prom, y_min, y_max, x_min, x_max, "velocity", "all")
@@ -1664,6 +1359,7 @@ def plot_spectrum(time, sr, x, y, z, ligo_freq, ligo_sr, ligo_x, ligo_y, ligo_z,
 
 
             
+
 '''##########################################################################################################################'''
 '''##########################################################################################################################'''
 
@@ -1675,6 +1371,7 @@ def plot_spectrum(time, sr, x, y, z, ligo_freq, ligo_sr, ligo_x, ligo_y, ligo_z,
                     
 '''##########################################################################################################################'''
 '''##########################################################################################################################'''
+
 
 
 
@@ -1782,7 +1479,7 @@ def plot_spectrogram(time, sr, x, y, z, function):
         if xmin == None or xmin < t[0]:
             xmin = t[0]
 
-        if xmax == None or xmax < t[-1]:
+        if xmax == None or xmax > t[-1]:
             xmax = t[-1]
         
         axis1.set_ylim(ymin,ymax) ## Uncomment to set limits
