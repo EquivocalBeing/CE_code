@@ -436,7 +436,7 @@ def get_optional_float(prompt, func, ID, sensor, time, allow_back=True):
         sensor = "seis"
 
     
-    rules = {
+    defaults = {
         "time_series": {
             "x_min": {"default": 0},
 
@@ -445,7 +445,7 @@ def get_optional_float(prompt, func, ID, sensor, time, allow_back=True):
             "other": {"default": None}
         },
 
-## ------------------------------------------------------------------------------------- ##
+        ## ------------------------------------------------------------------- ##
 
         "asd": {
             "fft_len": {"default": {"seis": 128,    ## if seis returns this value
@@ -484,7 +484,7 @@ def get_optional_float(prompt, func, ID, sensor, time, allow_back=True):
             "end_time": {"default": -1}
         },
 
-## ------------------------------------------------------------------------------------- ##
+        ## ------------------------------------------------------------------- ##
 
         "spectrogram": {
             "fft_len": {"default": 10},
@@ -519,7 +519,7 @@ def get_optional_float(prompt, func, ID, sensor, time, allow_back=True):
             return "BACK"
 
         ## selects:         function dict     ID dict       and  value       anything not listed
-        param_rules = rules.get(func, {}).get(ID, rules.get(func, {}).get("other", {}))
+        param_rules = defaults.get(func, {}).get(ID, defaults.get(func, {}).get("other", {}))
 
         if user_input in ["none", "", "default"]:
             val = param_rules.get(user_input) or param_rules.get("default")
@@ -531,10 +531,10 @@ def get_optional_float(prompt, func, ID, sensor, time, allow_back=True):
             '''
 
             if callable(val):
-                return val(time) # for the lambda function
+                return val(time)          ## for the lambda function
             
             elif isinstance(val, dict):
-                return val.get(sensor)
+                return val.get(sensor)    ## 
             
             else:
                 return val
