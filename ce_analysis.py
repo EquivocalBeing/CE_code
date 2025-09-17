@@ -272,6 +272,7 @@ def mseed_upload():  ## function to upload miniseed files from the Minimus
     
     print("thinking...")
 
+
     ## This was going to be so the user can see the start and end time(s). However, the Minimus will default to the same
     ## date if the GPS is not connected. So, it's start and end time(s) are often inaccurate. So, make sure the Minimus is getting 
     ## a GPS signal when taking data
@@ -285,6 +286,7 @@ def mseed_upload():  ## function to upload miniseed files from the Minimus
     print("File 2: Start time: " + str(beta[0].stats.starttime) + " End time:" + str(beta[0].stats.endtime) )
     print("File 3: Start time: " + str(gamma[0].stats.starttime) + " End time:" + str(gamma[0].stats.endtime) )
     '''    
+
 
     print("\nEnter the start and end times wish to look at")
     print("\nThe format should be like this:\n\n2020-01-01T00:00:00")
@@ -301,9 +303,11 @@ def mseed_upload():  ## function to upload miniseed files from the Minimus
     else:
         end_time = end  ## if end is none, it go to the end of the file
 
+
     ## if both are none, then it will plot/calculate over the entire file. These calculations will take a while and the plots
     ## will be dense. I advise NOT do this. This is so the user can escape the time input lines; if they don't want to input a time
-    
+
+
     def process_multiple_miniseed(file_paths, start_time=None, end_time=None):
     
         sample_rates_all = []
@@ -414,47 +418,47 @@ def mseed_upload():  ## function to upload miniseed files from the Minimus
 
 
 def get_optional_float(prompt, func, ID, sensor, time, allow_back=True):
-    """
-    Unified input validator for numeric parameters in different analysis functions.
-    - Handles 'none', 'default', and 'x' for back navigation
-    - Applies sensor-specific defaults
-    - Ensures invalid input doesn’t crash the program
-    """
+    
+    
+    '''
+    This is a function to make sure that the code doesn't crash if the user(s)
+    inputs a value or string that will cause an error.
 
-    if sensor == "mini":  # normalize alias
+    If the user inputs one of these values, the function will tell them the
+    input is invalid and what is allowed
+
+    Each function has it's own set of paramaters. These parameter return 
+    different values depending on the user input and sensor selected
+    '''
+
+
+    if sensor == "mini":
         sensor = "seis"
 
-    # --------------------------------------------------------------------------
-    # Rule dictionary (trimmed for clarity — you’d fill in all your IDs)
-    # --------------------------------------------------------------------------
+    
     rules = {
         "time_series": {
-            "x_min": {
-                "default": 0
-            },
-            "x_max": {
-                "default": lambda time: time[-1]
-            },
-            "generic": {
-                "default": None
-            }
+            "x_min": {"default": 0},
+
+            "x_max": {"default": lambda time: time[-1]},
+           
+            "other": {"default": None}
         },
 
+## ------------------------------------------------------------------------------------- ##
+
         "asd": {
-            "fft_len": {
-                "default": {"seis": 128, "mag": 10}
-            },
-            "overlap": {
-                "default": 50
-            },
-            "my_max": {
-                "default": 1e-7,
-                "none": None   # here, "none" is different from "default"
-            },
-            "my_min": {
-                "default": 1e-14,
-                "none": None
-            },
+            "fft_len": {"default": {"seis": 128,    ## if seis returns this value
+                                    "mag": 10}},
+
+            "overlap": {"default": 50},
+
+            "my_max": {"default": 1e-7,
+                       "none": None},
+
+            "my_min": {"default": 1e-14,
+                       "none": None},
+
             "y_max": {"default": {"seis": 1e-6, 
                                   "mag": 1e-7}},
                                   
@@ -467,14 +471,20 @@ def get_optional_float(prompt, func, ID, sensor, time, allow_back=True):
 
             "x_min": {"default": {"seis": 0.1, 
                                   "mag": 0.05},
-                      "none": None
-            },
+                      "none": None},
+
             "prominence": {"default": {"seis": 5, 
                                        "mag": 2.25},
-                            "none": None},
+                           "none": None},
                             
-            "frequency": {}
+            "frequency": {},
+
+            "start_time": {"default": 0},
+            
+            "end_time": {"default": -1}
         },
+
+## ------------------------------------------------------------------------------------- ##
 
         "spectrogram": {
             "fft_len": {"default": 10},
@@ -490,36 +500,46 @@ def get_optional_float(prompt, func, ID, sensor, time, allow_back=True):
             
             "x_min": {"default": None},
 
-            "c_min": {"default": {"seis": 1e-9, "mag": 1e-13}},
-            "c_max": {"default": {"seis": 1e-8, "mag": 1e-9}}}
+            "c_min": {"default": {"seis": 1e-9, 
+                                  "mag": 1e-13}},
+
+            "c_max": {"default": {"seis": 1e-8, 
+                                  "mag": 1e-9}}
+        }
     }
 
 
-#------------------------------------------------------------------------------------------------------------------------------#
 #------------------------------------------------------------------------------------------------------------------------------#
 
 
     while True:
         user_input = input(prompt).strip().lower()
 
-        if allow_back and user_input == "x":
+        if allow_back and user_input == "x":              ## this will send the user back to the previous menu
             return "BACK"
 
-        # Pick rule set for this func+ID
-        param_rules = rules.get(func, {}).get(ID, rules.get(func, {}).get("generic", {}))
+        ## selects:         function dict     ID dict       and  value       anything not listed
+        param_rules = rules.get(func, {}).get(ID, rules.get(func, {}).get("other", {}))
 
-        # Handle default/none
         if user_input in ["none", "", "default"]:
             val = param_rules.get(user_input) or param_rules.get("default")
 
+            '''
+            Some of the ID's have "none" and "default" return different values, and some retun the same value.
+            This makes it so if "none" is listed, it will select the None value. If "none" is not listed in the
+            dictionary, or if "" is entered, it will select the "default" value listed. 
+            '''
+
             if callable(val):
-                return val(time)  # e.g. lambda using time
+                return val(time) # for the lambda function
+            
             elif isinstance(val, dict):
                 return val.get(sensor)
+            
             else:
                 return val
 
-        # Otherwise, must be numeric
+        ## If the user inputs something not listed it will return the print line and not crash
         try:
             return float(user_input)
         except ValueError:
@@ -587,7 +607,7 @@ def plot_time_series(time, x, y, z, function):
                                             labels, [t0, t1, t2],
                                             ['blue', 'red', 'black']):
                 
-                plt.figure(figsize = (19, 11))
+                plt.figure(figsize = (20,8))
                 ax = plt.gca()
                 ax.yaxis.get_offset_text().set_fontsize(16)
 
@@ -611,7 +631,7 @@ def plot_time_series(time, x, y, z, function):
 
         ## ------------------------------------------------------------------------------------- ##        
 
-        plt.figure(figsize = (19, 11))
+        plt.figure(figsize = (20,8))
         ax = plt.gca()
         ax.yaxis.get_offset_text().set_fontsize(16)
             
@@ -1030,7 +1050,7 @@ def plot_spectrum(time, sr, x, y, z, ligo_freq, ligo_sr, ligo_x, ligo_y, ligo_z,
     
         ## Velocity Y limits  [ms⁻¹/√Hz]:             ## X limits  [Hz]:
         y_max = 10e-6;        y_max_p = 10e-6;        x_max = 100;        x_max_p = 100;    
-        y_min = 10e-13;       y_min_p = 10e-1;        x_min = 0.1;        x_min_p = 0.1
+        y_min = 10e-13;       y_min_p = 10e-13;        x_min = 0.1;        x_min_p = 0.1
         
 
 
@@ -1114,7 +1134,7 @@ def plot_spectrum(time, sr, x, y, z, ligo_freq, ligo_sr, ligo_x, ligo_y, ligo_z,
         print("\n\n----------------------------------------------------------------------------------------------------------")
         print("----------------------------------------------------------------------------------------------------------")
         
-        sub_choice = input("\n\n---------------------------------------\n-- ASD Spectra Options --\n0: Reset plot / FFT Parameters\n1: Compare to LIGO Hanford Data\n2: Change plot limits / FFT Parameters\n3: Look at specific times in the time series\n4: Look at a specific frequency\nx: Return to main menu\n---------------------------------------\n\nEnter your choice (0-4, x): ")
+        sub_choice = input("\n\n---------------------------------------\n-- ASD Spectra Options --\n0: Reset plot / FFT Parameters\n1: Replot spectra\n2: Compare to LIGO Hanford Data\n3: Change plot limits / FFT Parameters\n4: Look at specific times in the time series\n5: Look at a specific frequency\nx: Return to main menu\n---------------------------------------\n\nEnter your choice (0-5, x): ")
 
         '''
         ----------------------------------------------------------------------------------------------------------
@@ -1123,14 +1143,15 @@ def plot_spectrum(time, sr, x, y, z, ligo_freq, ligo_sr, ligo_x, ligo_y, ligo_z,
         ---------------------------------------
         -- ASD Spectra Options --
         0: Reset plot / FFT Parameters
-        1: Compare to LIGO Hanford Data
-        2: Change plot limits / FFT Parameters
-        3: Look at specific times in the time series
-        4: Look at a specific frequency 
+        1: Replot spectra
+        2: Compare to LIGO Hanford Data
+        3: Change plot limits / FFT Parameters
+        4: Look at specific times in the time series
+        5: Look at a specific frequency 
         x: Return to main menu"
         ---------------------------------------
 
-        Enter your choice (1-4, x): 
+        Enter your choice (0-5, x): 
         '''
 
 ################################################################################################################################
@@ -1157,10 +1178,22 @@ def plot_spectrum(time, sr, x, y, z, ligo_freq, ligo_sr, ligo_x, ligo_y, ligo_z,
             print("\n\nPlot limits and FFT parameters reset")
 
         elif sub_choice == "1":
+
+            ## --------------------------------------- Plots Velocity -------------------------------------- ##
+            asd(z, y, x, sr, None, None, None, None, None, None, None, None, None,
+                overlap, fft_length, prom, y_min, y_max, x_min, x_max, "velocity", "all")
+
+
+            ## ------------------------------------- Plots Displacement ------------------------------------ ##
+            if function == "seis":
+                asd(z, y, x, sr, None, None, None, None, None, None, None, None, None,
+                    overlap, fft_length, prom, my_min, my_max, x_min, x_max, "displacement", "all")
+
+        elif sub_choice == "2":
             
             if function == "seis":
             
-                ## ------------------------------------- E Channel ------------------------------------- ##
+                ## ------------------------------------- E Channel ------------------------------------- ##  
                 if ligo_freq is not None:
                     asd(None, None, x, sr, ligo_freq, ligo_x, ligo_y, ligo_z, None, None, None, None, None,
                         overlap, fft_length, prom, y_min, y_max, x_min, x_max, "velocity", "east")
@@ -1201,7 +1234,7 @@ def plot_spectrum(time, sr, x, y, z, ligo_freq, ligo_sr, ligo_x, ligo_y, ligo_z,
 ################################################################################################################################
 #------------------------------------------------------------------------------------------------------------------------------#            
 
-        elif sub_choice == "2":
+        elif sub_choice == "3":
 
             print("\nWhat x limits do you want (Can input none)")
             x_min = get_optional_float("Lower bound (Default: "+ str(x_min_p) + " [Hz]): ", "asd", "x_min", function, None)
@@ -1264,7 +1297,7 @@ def plot_spectrum(time, sr, x, y, z, ligo_freq, ligo_sr, ligo_x, ligo_y, ligo_z,
 ################################################################################################################################
 #------------------------------------------------------------------------------------------------------------------------------#
 
-        elif sub_choice == "3":
+        elif sub_choice == "4":
             print("What start time would you like to look at?")
             start_time = get_optional_float("Start time [s]: ", "asd", "start_time", None, time)
             if start_time == "BACK":
@@ -1292,7 +1325,7 @@ def plot_spectrum(time, sr, x, y, z, ligo_freq, ligo_sr, ligo_x, ligo_y, ligo_z,
 ################################################################################################################################
 #------------------------------------------------------------------------------------------------------------------------------#
 
-        elif sub_choice == "4":
+        elif sub_choice == "5":
             
             print("What frequency would you like to work at? ")
             freq = get_optional_float("In Hz's: ", "asd", 'frequency', None, None)
@@ -1351,7 +1384,7 @@ def plot_spectrum(time, sr, x, y, z, ligo_freq, ligo_sr, ligo_x, ligo_y, ligo_z,
 ################################################################################################################################
 #------------------------------------------------------------------------------------------------------------------------------#               
 
-        elif sub_choice == "x" or sub_choice == "" or sub_choice == "5":
+        elif sub_choice == "x" or sub_choice == "":
             print("\nReturning to main menu...")
             break
         else:
