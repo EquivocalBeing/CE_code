@@ -191,7 +191,6 @@ def csv_upload(function):  ## Function to upload CSV files from the WebDAQ
             return sample_rate, time, x_axis, y_axis, z_axis, ctrl_x, ctrl_y, ctrl_z, ctrl_freq
 
         elif control_file == 'mag_data.csv':
-            print(control_data_path)
 
             ligo = pd.read_csv(control_data_path, delimiter=",", skiprows=5)
             #ligo.columns = ["Sample", "Time (s)", "Voltage X (V)", "Voltage Y (V)", "Voltage Z (V)"]
@@ -206,6 +205,7 @@ def csv_upload(function):  ## Function to upload CSV files from the WebDAQ
 
     else:
         print("Control data not found\n")
+        return sample_rate, time, x_axis, y_axis, z_axis, None, None, None, None
         
 
 
@@ -421,7 +421,7 @@ def get_optional_float(prompt, func, ID, sensor, time, allow_back=True):
     
     
     '''
-    This is a function to make sure that the code doesn't crash if the user(s)
+    This is a function to make sure that the code doesn't crash if the user
     inputs a value or string that will cause an error.
 
     If the user inputs one of these values, the function will tell them the
@@ -448,7 +448,7 @@ def get_optional_float(prompt, func, ID, sensor, time, allow_back=True):
         ## ------------------------------------------------------------------- ##
 
         "asd": {
-            "fft_len": {"default": {"seis": 128,    ## if seis returns this value
+            "fft_len": {"default": {"seis": 128,    ## if fun == seis 
                                     "mag": 10}},
 
             "overlap": {"default": 50},
@@ -504,7 +504,8 @@ def get_optional_float(prompt, func, ID, sensor, time, allow_back=True):
                                   "mag": 1e-13}},
 
             "c_max": {"default": {"seis": 1e-8, 
-                                  "mag": 1e-9}}
+                                  "mag": 1e-9}},
+            "axis": {}
         }
     }
 
@@ -534,7 +535,7 @@ def get_optional_float(prompt, func, ID, sensor, time, allow_back=True):
                 return val(time)          ## for the lambda function
             
             elif isinstance(val, dict):
-                return val.get(sensor)    ## 
+                return val.get(sensor)    ## returns value based on func value
             
             else:
                 return val
@@ -930,10 +931,6 @@ def plot_spectrum(time, sr, x, y, z, ligo_freq, ligo_sr, ligo_x, ligo_y, ligo_z,
                     'n': 'red', 
                     'e': 'blue'}
 
-        label_map = {'z': 'Field data Z Dir', 
-                    'n': 'Field data N dir', 
-                    'e': 'Field data E dir'}
-
         ctrl_map   = {'z': lz,
                     'n': ly, 
                     'e': lx}
@@ -984,11 +981,11 @@ def plot_spectrum(time, sr, x, y, z, ligo_freq, ligo_sr, ligo_x, ligo_y, ligo_z,
             peaks_gquux = results[ch]['peaks']
             
             ## Field Data
-            plt.plot(f, y, color = color_map[ch], linewidth = 1.75, label = label_map[ch])
+            plt.plot(f, y, color = color_map[ch], linewidth = 1.75, label = title_map[ch])
             
             ## ctrl data
             if ctrl_map[ch] is not None:
-                plt.plot(lf, ctrl_map[ch], color = 'dimgrey', linewidth = 2, alpha = 0.5, label = f'Reference {label_map[ch]}')
+                plt.plot(lf, ctrl_map[ch], color = 'dimgrey', linewidth = 2, alpha = 0.5, label = f'LIGO {title_map[ch]}')
 
             ## Signal peaks
             if len(f[peaks_gquux]) != 0:
@@ -1038,8 +1035,8 @@ def plot_spectrum(time, sr, x, y, z, ligo_freq, ligo_sr, ligo_x, ligo_y, ligo_z,
 ################################################################################################################################
 
 
-################################################################################################################################
-#------------------------------------------------------------------------------------------------------------------------------#
+
+
 
     """
     The '_p' values are used for the spectrum menu below. These serve as the default values for the user to base their choices 
@@ -1048,25 +1045,25 @@ def plot_spectrum(time, sr, x, y, z, ligo_freq, ligo_sr, ligo_x, ligo_y, ligo_z,
 
     if function == "seis":
     
-        ## Velocity Y limits  [ms⁻¹/√Hz]:             ## X limits  [Hz]:
-        y_max = 10e-6;        y_max_p = 10e-6;        x_max = 100;        x_max_p = 100;    
-        y_min = 10e-13;       y_min_p = 10e-13;        x_min = 0.1;        x_min_p = 0.1
+        ## Velocity Y limits  [ms⁻¹/√Hz]:              ## X limits  [Hz]:
+        y_max = 10e-6;         y_max_p = 10e-6;         x_max = 100;         x_max_p = 100;    
+        y_min = 10e-13;        y_min_p = 10e-13;        x_min = 0.1;         x_min_p = 0.1
         
 
 
         ## Displacement Y Limits  [m/√Hz]:
-        my_max = 10e-7;     my_max_p = 10e-7  
-        my_min = 10e-15;    my_min_p = 10e-15
+        my_max = 10e-7;        my_max_p = 10e-7  
+        my_min = 10e-15;       my_min_p = 10e-15
 
 
 
-        ## fft length  [s]:                           ## Precent FFT Overlap  [%]:
-        fft_length = 128;   fft_length_p = 128;       overlap = 50;       overlap_p = 50      ## 50% fft overlap
+        ## fft length  [s]:                            ## Precent FFT Overlap  [%]:
+        fft_length = 128;      fft_length_p = 128;        overlap = 50;         overlap_p = 50      ## 50% fft overlap
 
 
 
         ## Peak Promience
-        prom = 5;           prom_p = 5
+        prom = 5;              prom_p = 5
 
 
         ## Plot labels
@@ -1076,22 +1073,24 @@ def plot_spectrum(time, sr, x, y, z, ligo_freq, ligo_sr, ligo_x, ligo_y, ligo_z,
         v_label = "Amplitude [ms⁻¹/√Hz]"
         s_label = "Amplitude [m/√Hz]"
 
+
 ################################################################################################################################
 #------------------------------------------------------------------------------------------------------------------------------#
 
+
     elif function == "mag":
         
-        ## X limits  [Hz]:                            ## FFT length:
-        x_max = 2000;        x_max_p = 2000;          fft_length = 10;        fft_length_p = 10
-        x_min = 0.01;        x_min_p = 0.01
+        ## X limits  [Hz]:                             ## FFT length:
+        x_max = 2000;         x_max_p = 2000;           fft_length = 10;         fft_length_p = 10
+        x_min = 0.01;         x_min_p = 0.01
          
-        y_max = 10e-8;       y_max_p = 10e-8
-        y_min = 10e-13;      y_min_p = 10e-13 
+        y_max = 10e-8;        y_max_p = 10e-8
+        y_min = 10e-13;       y_min_p = 10e-13 
 
 
 
-        ## Precent FFT Overla                       ## Peak Promience
-        overlap = 50;      overlap_p = 50;          prom = 2;                prom_p = 2
+        ## Precent FFT Overla                          ## Peak Promience
+        overlap = 50;         overlap_p = 50;             prom = 2;                prom_p = 2
 
 
 
@@ -1113,6 +1112,9 @@ def plot_spectrum(time, sr, x, y, z, ligo_freq, ligo_sr, ligo_x, ligo_y, ligo_z,
             overlap, fft_length, prom, my_min, my_max, x_min, x_max, "displacement", "all")
 
 
+
+
+
 ################################################################################################################################
 ################################################################################################################################
 
@@ -1124,6 +1126,9 @@ def plot_spectrum(time, sr, x, y, z, ligo_freq, ligo_sr, ligo_x, ligo_y, ligo_z,
                                             
 ################################################################################################################################
 ################################################################################################################################
+
+
+
 
 
     while True:
@@ -1237,44 +1242,52 @@ def plot_spectrum(time, sr, x, y, z, ligo_freq, ligo_sr, ligo_x, ligo_y, ligo_z,
         elif sub_choice == "3":
 
             print("\nWhat x limits do you want (Can input none)")
-            x_min = get_optional_float("Lower bound (Default: "+ str(x_min_p) + " [Hz]): ", "asd", "x_min", function, None)
+            x_min = get_optional_float("Lower bound (Default: "+ str(x_min_p) + " [Hz]): ", "asd", "x_min", 
+                                       function, None)
             if x_min == "BACK":
                 return
 
-            x_max = get_optional_float("Upper bound (Default: "+ str(x_max_p) + " [Hz]): ", "asd", "x_max", function, None)
+            x_max = get_optional_float("Upper bound (Default: "+ str(x_max_p) + " [Hz]): ", "asd", "x_max", 
+                                       function, None)
             if x_max == "BACK":
                 return
             
-#------------------------------------------------------------------------------------------------------------------------------#
+            #--------------------------------------------------------------------------------------------------------------#
 
             print("\nWhat y limits do you want for the velocity plot? (You can input None or default)")
-            y_min = get_optional_float("Lower bound (Default: "+ str(y_min_p) + "): ", "asd", "y_min", function, None)
+            y_min = get_optional_float("Lower bound (Default: "+ str(y_min_p) + "): ", "asd", "y_min", 
+                                       function, None)
             if y_min == "BACK":
                 return
             
-            y_max = get_optional_float("Upper bound (Default: "+ str(y_max_p) + "): ", "asd", "y_max", function, None)
+            y_max = get_optional_float("Upper bound (Default: "+ str(y_max_p) + "): ", "asd", "y_max", 
+                                       function, None)
             if y_max == "BACK":
                 return
                 
             if function == "seis":
                 print("\nWhat y limits do you want for the displacement plot? (You can input None or Default)")
-                my_min = get_optional_float("Lower bound  (Default: "+ str(my_min_p) + "): ", "asd", "my_min", function, None)
+                my_min = get_optional_float("Lower bound  (Default: "+ str(my_min_p) + "): ", "asd", "my_min", 
+                                            function, None)
                 if my_min == "BACK":
                     return
                 
-                my_max = get_optional_float("Upper bound  (Default: "+ str(my_max_p) + "): ", "asd", "my_max", function, None)
+                my_max = get_optional_float("Upper bound  (Default: "+ str(my_max_p) + "): ", "asd", "my_max", 
+                                            function, None)
                 if my_max == "BACK":
                     return
             
-#------------------------------------------------------------------------------------------------------------------------------#            
+            #--------------------------------------------------------------------------------------------------------------#           
   
             print("\nHow long do you want the FFTs to be? (You can input None)")
-            fft_length = get_optional_float("FFT length (Default: "+ str(fft_length_p) + " [s]): ", "asd", "fft_len", function, None)
+            fft_length = get_optional_float("FFT length (Default: "+ str(fft_length_p) +" [s]): ", 
+                                            "asd", "fft_len", function, None)
             if fft_length == "BACK":
                 return
             
             print("\nHow much FFT overlap do you want? i.e 50 for 50%")
-            overlap = get_optional_float("Overlap Percentage (Default: "+ str(overlap_p) + "%): ", "asd", "overlap", function, None)
+            overlap = get_optional_float("Overlap Percentage (Default: "+ str(overlap_p) + "%): ", 
+                                         "asd", "overlap", function, None)
             if overlap == "BACK":
                 return
             
@@ -1294,8 +1307,10 @@ def plot_spectrum(time, sr, x, y, z, ligo_freq, ligo_sr, ligo_x, ligo_y, ligo_z,
                 asd(z, y, x, sr, None, None, None, None, None, None, None, None, None,
                     overlap, fft_length, prom, my_min, my_max, x_min, x_max, "displacement", "all")
 
+
 ################################################################################################################################
 #------------------------------------------------------------------------------------------------------------------------------#
+
 
         elif sub_choice == "4":
             print("What start time would you like to look at?")
@@ -1308,6 +1323,8 @@ def plot_spectrum(time, sr, x, y, z, ligo_freq, ligo_sr, ligo_x, ligo_y, ligo_z,
                 return
 
             start = int(start_time * sr)
+            if start < 0:
+                start = 0
             end = int(end_time * sr)
 
             z1 = z[start:end]
@@ -1318,12 +1335,13 @@ def plot_spectrum(time, sr, x, y, z, ligo_freq, ligo_sr, ligo_x, ligo_y, ligo_z,
                 overlap, fft_length, prom, y_min, y_max, x_min, x_max, "velocity", "all")
             
             if function == "seis":
-                asd(z, y, x, sr, None, None, None, None, None, None, None, None, None,
+                asd(z1, y1, x1, sr, None, None, None, None, None, None, None, None, None,
                     overlap, fft_length, prom, my_min, my_max, x_min, x_max, "displacement", "all")
 
 
 ################################################################################################################################
 #------------------------------------------------------------------------------------------------------------------------------#
+
 
         elif sub_choice == "5":
             
@@ -1360,13 +1378,13 @@ def plot_spectrum(time, sr, x, y, z, ligo_freq, ligo_sr, ligo_x, ligo_y, ligo_z,
 
             if function == "mag":
                 
-                fft_length = 100 
+                fft_length_1 = 100 
                 prom = 4.5
 
                 ## -------------------------------------- E Channel -------------------------------------- ##
                 if ligo_sr is not None:
                     asd(None, None, x, sr, None, None, None, None, ligo_sr, ligo_x, None, None, freq,
-                        overlap, fft_length, prom, y_min, y_max, freq_min, freq_max, "velocity", "east")
+                        overlap, fft_length_1, prom, y_min, y_max, freq_min, freq_max, "velocity", "east")
                     
                 elif ligo_sr is None:
                     print("LIGO data not found")
@@ -1374,12 +1392,13 @@ def plot_spectrum(time, sr, x, y, z, ligo_freq, ligo_sr, ligo_x, ligo_y, ligo_z,
                 ## -------------------------------------- N Channel -------------------------------------- ##
                 if ligo_sr is not None:
                     asd(None, y, None, sr, None, None, None, None, ligo_sr, None, ligo_y, None, freq,
-                        overlap, fft_length, prom, y_min, y_max, freq_min, freq_max, "velocity", "north")
+                        overlap, fft_length_1, prom, y_min, y_max, freq_min, freq_max, "velocity", "north")
 
                 ## -------------------------------------- Z Channel -------------------------------------- ##
                 if ligo_sr is not None:
                     asd(z, None, None, sr, None, None, None, None, ligo_sr, None, None, ligo_z, freq,
-                        overlap, fft_length, prom, y_min, y_max, freq_min, freq_max, "velocity", "zed")
+                        overlap, fft_length_1, prom, y_min, y_max, freq_min, freq_max, "velocity", "zed")
+                    
                 
 ################################################################################################################################
 #------------------------------------------------------------------------------------------------------------------------------#               
@@ -1467,6 +1486,7 @@ def plot_spectrogram(time, sr, x, y, z, function):
 #------------------------------------------------------------------------------------------------------------------------------#
 ################################################################################################################################
 
+
     def spectrogram(data, channel, sample_rate, over_lap, fft, c_min, c_max, ymin, ymax, xmin, xmax, function):
         warnings.simplefilter('ignore')
 
@@ -1520,6 +1540,7 @@ def plot_spectrogram(time, sr, x, y, z, function):
         plt.tight_layout()
         plt.show()
 
+
 ################################################################################################################################
 #------------------------------------------------------------------------------------------------------------------------------#
 ################################################################################################################################
@@ -1542,6 +1563,7 @@ def plot_spectrogram(time, sr, x, y, z, function):
 
 ################################################################################################################################
 #------------------------------------------------------------------------------------------------------------------------------#
+################################################################################################################################
 
     
     while True:
@@ -1553,12 +1575,13 @@ def plot_spectrogram(time, sr, x, y, z, function):
         -- Spectrogram Options --
         0: Reset plot / FFT Parameters
         1: Replot spectrogram
-        2: Change plot limits / FFT Parameters
+        2: Replot one axis
+        3: Change plot limits / FFT Parameters
         x: Return to main menu
         ---------------------------------------
         '''
 
-        sub_choice = input("\n\n---------------------------------------\n-- Spectrogram Options --\n0: Reset plot / FFT Parameters\n1: Replot spectrogram\n2: Change plot limits / FFT Parameters\nx: Return to main menu\n---------------------------------------\n\nEnter your choice (0-1, x): ")
+        sub_choice = input("\n\n---------------------------------------\n-- Spectrogram Options --\n0: Reset plot / FFT Parameters\n1: Replot spectrogram\n2: Replot one axis\n3: Change plot limits / FFT Parameters\nx: Return to main menu\n---------------------------------------\n\nEnter your choice (0-3, x): ")
         
 #------------------------------------------------------------------------------------------------------------------------------#            
 
@@ -1600,6 +1623,34 @@ def plot_spectrogram(time, sr, x, y, z, function):
 
         elif sub_choice == "2":
             
+            print("Which directional axis would you like to look at?\n1 for x;    2 for y;   3 for z")
+            axis = get_optional_float("Dir: ", "spectrogram", 'axis', None, None)
+            if axis == "BACK":
+                return
+
+
+            if axis == 1:
+
+                ## -------------------------------------- X Channel -------------------------------------- ##
+
+                spectrogram(x, "x", sr, overlap, fft_len, cmin, cmax, y_min, y_max, x_min, x_max, function)
+  
+            elif axis == 2:
+                
+                ## -------------------------------------- Y Channel -------------------------------------- ##
+                
+                spectrogram(y, "y", sr, overlap, fft_len, cmin, cmax, y_min, y_max, x_min, x_max, function)
+  
+            elif axis == 3:        
+                
+                ## -------------------------------------- Z Channel -------------------------------------- ##
+                
+                spectrogram(z, "z", sr, overlap, fft_len,  cmin, cmax, y_min, y_max, x_min, x_max, function)
+
+#------------------------------------------------------------------------------------------------------------------------------# 
+
+        elif sub_choice == "3":
+            
             print("\nWhat x limits do you want (You can input None)")
             x_min = get_optional_float("Lower bound: ", "spectrogram", "x_min", function, None)
             if x_min == "BACK":
@@ -1611,34 +1662,40 @@ def plot_spectrogram(time, sr, x, y, z, function):
                   
 
             print("\nWhat y limits do you want for the velocity plot? (You can input None or default)")
-            y_min = get_optional_float("Lower bound (Default: "+ str(y_min_p) + " [Hz]): ", "spectrogram", "y_min", function, None)
+            y_min = get_optional_float("Lower bound (Default: "+ str(y_min_p) + " [Hz]): ", "spectrogram", "y_min", 
+                                       function, None)
             if y_min == "BACK":
                 return
             
-            y_max = get_optional_float("Upper bound (Default: "+ str(y_max_p) + " [Hz]): ", "spectrogram", "y_max", function, None)
+            y_max = get_optional_float("Upper bound (Default: "+ str(y_max_p) + " [Hz]): ", "spectrogram", "y_max", 
+                                       function, None)
             if y_max == "BACK":
                 return
             
-#------------------------------------------------------------------------------------------------------------------------------#
+            #--------------------------------------------------------------------------------------------------------------#
                 
             print("\nWhat intensity limits do you want for the plot? (You can input None or Default)")
-            cmin = get_optional_float("Lower bound (Default: "+ str(cmin_p) + "): ", "spectrogram", "c_min", function, None)
+            cmin = get_optional_float("Lower bound (Default: "+ str(cmin_p) + "): ", "spectrogram", "c_min", 
+                                      function, None)
             if cmin == "BACK":
                 return
 
-            cmax = get_optional_float("Upper bound  (Default: "+ str(cmax_p) + "): ", "spectrogram", "c_max", function, None)
+            cmax = get_optional_float("Upper bound  (Default: "+ str(cmax_p) + "): ", "spectrogram", "c_max", 
+                                      function, None)
             if cmax == "BACK":
                 return
             
-#------------------------------------------------------------------------------------------------------------------------------#            
+            #--------------------------------------------------------------------------------------------------------------#            
   
             print("\nHow long do you want the FFTs to be? (You can input None)")
-            fft_len = get_optional_float("FFT length (Default: "+ str(fft_len_p) + " [s]): ", "spectrogram", "fft_len", function, None)
+            fft_len = get_optional_float("FFT length (Default: "+ str(fft_len_p) + " [s]): ", "spectrogram", "fft_len",
+                                          function, None)
             if fft_len == "BACK":
                 return
             
             print("\nHow much FFT overlap do you want? i.e 50 for 50%")
-            overlap = get_optional_float("Overlap Percentage (Default: "+ str(overlap_p) + "%): ", "spectrogram", "overlap", function, None)
+            overlap = get_optional_float("Overlap Percentage (Default: "+ str(overlap_p) + "%): ", "spectrogram", "overlap",
+                                         function, None)
             if overlap == "BACK":
                 return
             
@@ -1661,7 +1718,7 @@ def plot_spectrogram(time, sr, x, y, z, function):
     
 
 #------------------------------------------------------------------------------------------------------------------------------#
-#------------------------------------------------------------------------------------------------------------------------------#
+
 
         elif sub_choice == "x" or sub_choice == "" or sub_choice == "2":
             print("\nReturning to main menu...")
@@ -1698,9 +1755,11 @@ def main_menu():
         
         choice = input("\nEnter your choice (1-2, x): ").strip().lower()
         
+
 ################################################################################################################################
 #------------------------------------------------------------------------------------------------------------------------------#
         
+
         if choice == "1":
             
             function = "mag"
@@ -1801,9 +1860,11 @@ def main_menu():
                         else:
                             print("\nInvalid input. Try again.")
 
+
 ################################################################################################################################
 #------------------------------------------------------------------------------------------------------------------------------#
-                    
+
+
                 elif sub_choice == "2":
 
                     function = "mini"
@@ -1872,4 +1933,3 @@ def main_menu():
 
 if __name__ == "__main__":
     main_menu()
-
