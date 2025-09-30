@@ -1,3 +1,5 @@
+
+
 ################################################################################################################################
 #------------------------------------------------------------------------------------------------------------------------------#
                                                                      
@@ -431,16 +433,12 @@ def get_optional_float(prompt, func, ID, sensor, time, allow_back=True):
     different values depending on the user input and sensor selected
     '''
 
-
-    if sensor == "mini":
-        sensor = "seis"
-
     
     defaults = {
         "time_series": {
             "x_min": {"default": 0},
 
-            "x_max": {"default": lambda time: time[-1]},
+            "x_max": {"default": lambda time: time[len(time) - 1]},
            
             "other": {"default": None}
         },
@@ -705,12 +703,16 @@ def plot_time_series(time, x, y, z, function):
         #print("2: Save plot to file")                   # -- Maybe later
 
         if sub_choice == "1":
-            print("\nWhat x limits do you want (You can input None)")
-            x_min = get_optional_float("Lower bound [s]: ", "time_series", 'x_min', None, time)
+            
+            t = time
+            if function == 'mini':
+                t = time
+            print("\nWhat x limits do you want (You can input None)") 
+            x_min = get_optional_float("Lower bound [s]: ", "time_series", 'x_min', None, t)
             if x_min == "BACK":
                 return
             
-            x_max = get_optional_float("Upper bound [s]: ", "time_series", 'x_max', None, time)
+            x_max = get_optional_float("Upper bound [s]: ", "time_series", 'x_max', None, t[0])
             if x_max == "BACK":
                 return
             
@@ -725,7 +727,7 @@ def plot_time_series(time, x, y, z, function):
             if y_max == "BACK":
                 return
             
-                
+################################################################################################################################
 #------------------------------------------------------------------------------------------------------------------------------#
 
             while True:
@@ -752,6 +754,7 @@ def plot_time_series(time, x, y, z, function):
 
 ################################################################################################################################
 #------------------------------------------------------------------------------------------------------------------------------#
+               
                 if channel == "0":
             
                     x_min = 0
@@ -764,6 +767,8 @@ def plot_time_series(time, x, y, z, function):
 
                     print("\n\nPlot limits reset")
 
+                    
+                ## ------------------------------------ All Channel ------------------------------------ ##
                 elif channel == "1":
                     if function == "mag":
                         time_series("0", time, z, y, x, x_max, x_min, y_max, y_min, function)
@@ -772,17 +777,17 @@ def plot_time_series(time, x, y, z, function):
                         time_series(channel, time, z, y, x, x_max, x_min, y_max, y_min, function)
 
 
-#---------------------------------------------------------- X Channel ---------------------------------------------------------#
+                ## ------------------------------------- X Channel ------------------------------------- ##
                 elif channel == "2":
                     time_series(channel, time, z, y, x, x_max, x_min, y_max, y_min, function)
                     
 
-#---------------------------------------------------------- Y Channel ---------------------------------------------------------#
+                ## ------------------------------------- Y Channel ------------------------------------- ##
                 elif channel == "3":
                     time_series(channel, time, z, y, x, x_max, x_min, y_max, y_min, function)
                     
 
-#---------------------------------------------------------- Z Channel ---------------------------------------------------------#
+                ## ------------------------------------- Z Channel ------------------------------------- ##
                 elif channel == "4":
                     time_series(channel, time, z, y, x, x_max, x_min, y_max, y_min, function)
 
@@ -1933,3 +1938,4 @@ def main_menu():
 
 if __name__ == "__main__":
     main_menu()
+
