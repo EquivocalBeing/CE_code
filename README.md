@@ -1,4 +1,5 @@
 # Read Me
+## Data Analysis Code
 
 This is the analysis code for the data retrieved when conducting CE site testing. Everything for the magnetometer and seismometer analysis is contained this is code. There is a .py version, which will run on any system that can run python. As well as a .ipynb, if you are using jupyter notebook. The code operates via a GUI and user inputs, so you shouldn't have to manually check variable values and names.
 
@@ -10,7 +11,7 @@ To install the packages, you will need to either use **pip install** or **conda 
 After downloading the packages, go to **Environments** and check that the packages are installed. If they are not appearing, you will need to select **Update Index**. You will then need to select the package(s) and install them, this may take a bit. Once everything is installed the codes should run properly
 
 ------------------------------------------------------------------------------------------------------
-# Read Me (this time for the site evaluation API)
+## Site Evaluation API
 
 ## Libraries
 
