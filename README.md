@@ -1,19 +1,38 @@
 # Read Me
 ## Data Analysis Code
 
-This is the analysis code for the data retrieved when conducting CE site testing. Everything for the magnetometer and seismometer analysis is contained this is code. There is a .py version, which will run on any system that can run python. As well as a .ipynb, if you are using jupyter notebook. The code operates via a GUI and user inputs, so you shouldn't have to manually check variable values and names.
+This is the analysis code for the data retrieved when conducting CE site testing. Everything for the magnetometer and seismometer analysis is contained in this is code. There is a .py version, which will run on any system that can run python. As well as a .ipynb, if you are using jupyter notebook. The code operates via a GUI and user inputs, so the user will not have to maunally go into the code and change variables.
 
 Additionally, there are LIGO data files. These are so you can compare the field data to what is recorded at ligo. You will need to put these data files in the same directory as the code(s). The code should run with and without the data files downloaded.
 
+In order for the code to operate properly, you'll need to install a package. To this in Jupyter, you'll need to go into the Qt Console; the built in terminal for anaconda navigator. There you can install the package via the method below.
+```
+conda install conda-forge::obspy
+```
+If that doesn't work, then you may need touse **pip install**
+```
+pip install obspy
+```
+After downloading the packages, you'll need to go to **Environments** and check that the packages are installed. If they are not appearing, you will need to select **Update Index**. You will then need to select the package and install it; this may take a bit. If any other packages are missing you can install them via the same method. Once everything is installed the codes should run properly
+
+### FIle Section
+Once you've started the code and selected magnetometer or seismometer, you will be greeted with a GUI. If you are using Windows, the icon will appear in your task bar. The icon will be the same as a file document with the top right corner folded. Once you click on that, it will bring up the GUI for fill selection. After you've found your desired file, you will need to close the GUI window in order to proceed in the code.
+
+### Code Functions
+The code has three primary plotting functions.
+- Time series
+- Amplitude Spectral Density Plot (ASD Plot)
+- Spectrogram
+
+There is a menu to go in between these functions. As well as additional menus to change the parameters of each plot and to further the data analysis process. Each function/option is denoted by a number. So, you simply need to type in the number an hit enter. 
+
+If you have any questions or confusion, this is a video going through the data acquisition process as well as using the code.
+https://www.youtube.com/watch?v=Re8FvCaCeBg
 ------------------------------------------------------------------------------------------------------
-
-To install the packages, you will need to either use **pip install** or **conda install conda-forge::**. There is a terminal (Qt Console) built into anaconda navigator, this is where you will want to download the packages.
-After downloading the packages, go to **Environments** and check that the packages are installed. If they are not appearing, you will need to select **Update Index**. You will then need to select the package(s) and install them, this may take a bit. Once everything is installed the codes should run properly
-
 ------------------------------------------------------------------------------------------------------
 ## Site Evaluation API
 
-## Libraries
+### Libraries
 
 This is an API for Cosmic Explorer site evaluation, developed for ArcGIS in Python. 
 
@@ -33,7 +52,7 @@ pip install arcgis arcgis-mapping geopandas shapely pyproj pykml
 conda install -c conda-forge gdal
 ```
 
-## Usage
+### Usage
 
 Start with the file titled "setting_up." There are two ways of logging into your ArcGIS Online account, and the comments in "setting_up" will walk you through it. The code in "setting_up" will convert the KML files of the Cosmic Explorer sites to hosted feature layers, and publish them to your ArcGIS Online web map. KMLs must be converted to feature layers for ArcGIS to run any spatial analysis on them.
 
