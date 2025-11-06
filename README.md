@@ -27,6 +27,7 @@ x: Exit
         
 *Exit for all menu's is 'x' or enter
 -----------------------------------------------
+
 Enter your choice (1-2, x)
 ```
 This will let the code know which defaults values and methods to use. Since, the data acquisition/analysis is slighty different between the mag and seis.
