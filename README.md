@@ -13,6 +13,7 @@ If that doesn't work, then you may need touse **pip install**
 ```
 pip install obspy
 ```
+
 After downloading the packages, you'll need to go to **Environments** and check that the packages are installed. If they are not appearing, you will need to select **Update Index**. You will then need to select the package and install it; this may take a bit. If any other packages are missing you can install them via the same method. Once everything is installed the codes should run properly
 
 ### FIle Section
