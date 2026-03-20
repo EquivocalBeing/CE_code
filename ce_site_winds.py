@@ -1,12 +1,12 @@
 import pandas as pd
 import numpy as np
-print("thinking...")
+#print("thinking...")
 from matplotlib import pyplot as plt
 
 
+station = "A00018-23162"
 
-
-data = pd.read_csv("/ligo/home/carlos.campos/Downloads/CE_wind_stations/A00018-23162-2024", delimiter='\s+') 
+data = pd.read_csv(r"C:\Users\cacam\Documents\CE_wind_stations\\" + station + "-2024.", delimiter='\s+') 
 
 data.columns = ["Year", "Month", "Day", "Hour", "Air Temp", "Dew Point", "Pressure (MSL)", "Wind Direction", "Wind Speed", "Sky Condition", "Liquid Precipitation 1 hr", "Liquid Precipitation 6 hr"]
 
@@ -16,23 +16,31 @@ year = data["Year"]
 month = data["Month"]
 day = data["Day"]
 hour = data["Hour"]
+#print("thinking...")
 
-date = []
+dates = []
 
 for i in range(0, len(year)):
-    date_x = str(year[i]) + ","  + str(month[i]) + "," + str(day[i]) + "."  + str(hour[i])
-    date.append(date_x)
+    date = str(year[i]) + ","  + str(month[i]) + "," + str(day[i]) + "."  + str(hour[i])
+    dates.append(date)
 
 
 wind = [0 if item == -9999 else item for item in wind]
 
 wind = np.array(wind)
+#print("thinking...")
 
-print(date[0])
-print(len(hour))
+plt.figure(figsize = (20, 8))
+plt.plot(dates, wind/10)
 
-plt.plot(date, wind/10)
-plt.xlim(date[0], date[-1])
-plt.xlabel("Date")
-plt.ylabel("Wind Speed [m/s]")
-plt.show()
+
+plt.title(station, fontweight = 'bold' , fontsize = 25)
+plt.xlabel("Date", fontweight = 'bold' , fontsize = 20)
+plt.ylabel("Wind Speed [m/s]", fontweight = 'bold' , fontsize = 20)
+
+plt.grid(True)
+plt.tight_layout()
+
+plt.yticks(fontsize = 20, fontweight = "bold")
+plt.xlim(dates[0], dates[-1])
+plt.savefig(station + ".png")
