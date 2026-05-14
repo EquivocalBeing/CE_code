@@ -1,5 +1,3 @@
-
-
 ################################################################################################################################
 #------------------------------------------------------------------------------------------------------------------------------#
                                                                      
@@ -52,6 +50,9 @@ import matplotlib.ticker as mticker
 import warnings  ## If warnings are still being printed out, just move the ignore line below whatever is causing the warning(s)
 import os
 
+with warnings.catch_warnings():
+    warnings.simplefilter('ignore')
+
 
 '''##########################################################################################################################'''
 '''##########################################################################################################################'''
@@ -66,9 +67,10 @@ import os
 '''##########################################################################################################################'''
     
     
-file_path_global = None
 
-def csv_upload(function):  ## Function to upload CSV files from the WebDAQ
+def csv_upload(function, pre_amp):  ## Function to upload CSV files from the WebDAQ
+    
+    result = {"path": None}
     
     print("\n------------------------------ A GUI icon shoud've appear in your task bar ------------------------------")
     print("---------------------------------------------------------------------------------------------------------")
@@ -80,14 +82,14 @@ def csv_upload(function):  ## Function to upload CSV files from the WebDAQ
     
 
     def upload_file():
-        global file_path_global ## makes variable global 
 
         ## file selection 
-        file_path_global = filedialog.askopenfilename(title="Select a file", filetypes=[("All Files", "*.csv")]) 
-        ## You can chnage it to just open .csv files via:
+        result["path"] = filedialog.askopenfilename(title="Select a file", filetypes=[("All Files", "*.csv")]) 
+        
+        ## You can changge it to just open .csv files via:
         #       filetypes=[("CSV Files", "*.csv")] 
 
-        print(f"\nFile selected: {file_path_global}") ## Prints out data path as a sanity check
+        print(f"\nFile selected: " + result["path"]) ## Prints out data path as a sanity check
         print("\n----------------------------------------------------------------------------------------------------------")
         print("-------------------------------------- Close the GUI program window --------------------------------------")
         print("----------------------------------------------------------------------------------------------------------")
@@ -119,13 +121,19 @@ def csv_upload(function):  ## Function to upload CSV files from the WebDAQ
 
     root.mainloop() ## Runs the GUI
     
+    file_path = result["path"]
+    
+    if not file_path:
+        print("No file selected. Returning to menu.")
+        return None
+    
     print("thinking...")
 
     ## Selects info from metadata 
     metadata_rows = []
     metadata = {}
 
-    with open(file_path_global, 'r') as f:
+    with open(file_path, 'r') as f:
         for _ in range(5):
             metadata_rows.append(f.readline().strip()) 
 
@@ -145,22 +153,28 @@ def csv_upload(function):  ## Function to upload CSV files from the WebDAQ
 
     if function == "mag":
         columns = ["Sample", "Time (s)", "Noise (V)", "Voltage X (V)", "Voltage Y (V)", "Voltage Z (V)", "blank"]
-        calibration = (1.222e-05)/21
-        ctrl_calibration = (1.222e-05)/21
+        if pre_amp == True:
+            calibration = (1.222e-05)/21
+        else:
+            calibration = 1.222e-05
+
         control_file = 'mag_data.csv'  ## If the ctrl/LIGO file is changed, put the new file name here
         
     elif function == "seis":
         columns = ["Sample", "Time (s)", "Noise (V)", "Channel E (V)", "Channel N (V)", "Channel Z (V)", "blank"]
-        calibration = (0.0125e-1)/21
-        ctrl_calibration = 0.0076e-6
-        control_file = 'ligo_seis_data.txt'
+        if pre_amp == True:
+            calibration = (0.0125e-1)/21
+        else:
+            calibration = 0.0125e-1
+        #ctrl_calibration = 0.0076e-6
+        control_file = 'LHOSeismic.txt'
         
     else:
         print("oops") 
     
 #------------------------------------------------------------------------------------------------------------------------------#
     
-    data = pd.read_csv(file_path_global, skiprows = 6, delimiter=',') 
+    data = pd.read_csv(file_path, skiprows = 6, delimiter=',') 
 
     data.columns = columns
 
@@ -180,17 +194,19 @@ def csv_upload(function):  ## Function to upload CSV files from the WebDAQ
     if os.path.exists(control_data_path):
         
 
-        if control_file == 'ligo_seis_data.txt':
+        if control_file == 'LHOSeismic.txt':
             huddle = pd.read_csv(control_data_path, delimiter="\s+")
-            huddle.columns = ["frequency", "x", "y", "z"]
+            huddle.columns = ["time", "x", "y", "z"]
 
-            ctrl_freq = huddle["frequency"]
-            ctrl_x = huddle["x"] * ctrl_calibration
+            #ctrl_time = huddle["time"]
             print("thinking...")
-            ctrl_y = huddle["y"] * ctrl_calibration
-            ctrl_z = huddle["z"] * ctrl_calibration
             
-            return sample_rate, time, x_axis, y_axis, z_axis, ctrl_x, ctrl_y, ctrl_z, ctrl_freq
+            ctrl_x = huddle["x"] * 1e-9
+            ctrl_y = huddle["y"] * 1e-9
+            ctrl_z = huddle["z"] * 1e-9
+            ctrl_sr = 256
+            
+            return sample_rate, time, x_axis, y_axis, z_axis, ctrl_x, ctrl_y, ctrl_z, ctrl_sr
 
         elif control_file == 'mag_data.csv':
 
@@ -262,13 +278,17 @@ def mseed_upload():  ## function to upload miniseed files from the Minimus
 
     root = tk.Tk()
     root.title("Multi File Uploader GUI")
-    icon = PhotoImage(file="ce_gui_image.png")
-    root.iconphoto(False, icon)
+    #icon = PhotoImage(file="ce_gui_image.png")
+    #root.iconphoto(False, icon)
 
     upload_button = tk.Button(root, text="Upload mseed flie", command=upload_files)
     upload_button.pack(pady=15)
 
     root.mainloop() ## Runs the application 
+    
+    if not file_paths_global:
+        print("No file selected. Returning to menu.")
+        return None
 
     paths = sorted(file_paths_global) ## sorts paths alphabetically and saves it to a variable   
     
@@ -276,7 +296,7 @@ def mseed_upload():  ## function to upload miniseed files from the Minimus
 
 
     ## This was going to be so the user can see the start and end time(s). However, the Minimus will default to the same
-    ## date if the GPS is not connected. So, it's start and end time(s) are often inaccurate. So, make sure the Minimus is getting 
+    ## date if the GPS is not connected. So, it's start and end time(s) are often inaccurate. So, make sure the Minimus is getting
     ## a GPS signal when taking data
 
     '''
@@ -305,10 +325,13 @@ def mseed_upload():  ## function to upload miniseed files from the Minimus
     else:
         end_time = end  ## if end is none, it go to the end of the file
 
-
-    ## if both are none, then it will plot/calculate over the entire file. These calculations will take a while and the plots
-    ## will be dense. I advise NOT do this. This is so the user can escape the time input lines; if they don't want to input a time
-
+    ##
+    '''
+    if both are none, then it will plot/calculate over the entire file. These calculations will take a while and the plots
+    will be dense. I advise NOT do this. This is so the user can escape the time input lines; 
+    if they don't want to input a time
+    '''
+    ##
 
     def process_multiple_miniseed(file_paths, start_time=None, end_time=None):
     
@@ -384,22 +407,24 @@ def mseed_upload():  ## function to upload miniseed files from the Minimus
 #------------------------------------------------------------------------------------------------------------------------------#
 
     script_dir = os.getcwd()
-    control_data_path = os.path.join(script_dir, 'ligo_seis_data.txt')
+    control_data_path = os.path.join(script_dir, 'LHOSeismic.txt')
 
     if os.path.exists(control_data_path):
         huddle = pd.read_csv(control_data_path, delimiter="\s+")
 
-        huddle.columns = ["frequency", "x", "y", "z"]
+        huddle.columns = ["time", "x", "y", "z"]
 
-        hf = huddle["frequency"]
-        hx = huddle["x"] * 0.0076e-6
-        hy = huddle["y"] * 0.0076e-6 
-        hz = huddle["z"] * 0.0076e-6
+        #hf = huddle["time"]
+        lx = huddle["x"] * 1e-9
+        ly = huddle["y"] * 1e-9 
+        lz = huddle["z"] * 1e-9
+        l_sr = 256
 
     else:
         print("LIGO data not found\n")
+        hx = hy = hz = hf = None
     
-    return e, n, z, time_e, time_n, time_z, sr, hx, hy, hz, hf
+    return e, n, z, time_e, time_n, time_z, sr, lx, ly, lz, l_sr
 
 
 
@@ -552,7 +577,7 @@ def get_optional_float(prompt, func, ID, sensor, time, allow_back=True):
 
 
 
-'''##########################################################################################################################'''    
+'''##########################################################################################################################'''
 '''##########################################################################################################################'''
 
                               #####  #   #######   #####     #####  #####  ####    #  #####  #####
@@ -573,16 +598,16 @@ def plot_time_series(time, x, y, z, function):
     def time_series(channels, t, zed, north, east, xmax, xmin, ymax, ymin, function):
         
         
-        title = "Seismic"
-        labels = ['E', 'N', 'Z']
-        y_label = "Amplitude (m/s)"
+        title        = "Seismic"
+        labels       = ['E', 'N', 'Z']
+        y_label      = "Amplitude (m/s)"
 
         t0, t1, t2 = t, t, t
             
         if function == "mag":
-            title = "Magnetic"
-            labels = ['X', 'Y', 'Z']
-            y_label = "Amplitude [T]"
+            title    = "Magnetic"
+            labels   = ['X', 'Y', 'Z']
+            y_label  = "Amplitude [T]"
 
         elif function == "mini":
 
@@ -590,9 +615,9 @@ def plot_time_series(time, x, y, z, function):
             t0, t1, t2 = t[0], t[1], t[2]
 
         channel_map = {
-            '1': [(title, labels[2], zed, t2 , 'black'), 
+            '1': [(title, labels[2], zed, t2 , 'black'),    ## All Axises
                   (title, labels[1], north, t1 , 'red'), 
-                  (title, labels[0], east, t0, 'blue')],    ## All Axises
+                  (title, labels[0], east, t0, 'blue')],
 
             '2': [(title, labels[0], east, t0, 'blue')],    ## X / E Axis
             '3': [(title, labels[1], north, t1, 'red')],    ## Y / N Axis
@@ -602,15 +627,16 @@ def plot_time_series(time, x, y, z, function):
         ## ------------------------------------------------------------------------------------- ##
 
         if channels == "0":
-            for data, label, t, color in zip([east, north, zed],
-                                            labels, [t0, t1, t2],
-                                            ['blue', 'red', 'black']):
+            for data, label, t, colors in zip([east, north, zed],
+                                               labels, 
+                                              [t0, t1, t2],
+                                              ['blue', 'red', 'black']):
                 
                 plt.figure(figsize = (20,8))
                 ax = plt.gca()
                 ax.yaxis.get_offset_text().set_fontsize(16)
 
-                plt.plot(t, data, linewidth = 1.5, color = color, label = label)
+                plt.plot(t, data, linewidth = 1.5, color = colors, label = label)
 
                 plt.title(title + " Channel: " + label, fontweight = 'bold', fontsize = 25)
                 plt.xlabel("Time (s)", fontweight = "bold", fontsize = 20)
@@ -683,22 +709,19 @@ def plot_time_series(time, x, y, z, function):
         # In Jupyter the place of the input line is not consistent. So, sometimes it is printed out before the option list.
         # To fix this, the option list was placed into the input line, so that everything is alway together.
 
-        print("\n\n----------------------------------------------------------------------------------------------------------")
-        print("----------------------------------------------------------------------------------------------------------")
+        sub_choice = input("""
+        
+----------------------------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------------
 
-        sub_choice = input("\n---------------------------------------\n-- Zoom in Menu --\n1: Zoom in on specific time range\nx: Return to main menu\n---------------------------------------\n\nEnter your choice (1, x): ")
-        
-        # This is what the menu will look like printed out
-        
-        '''
-        ---------------------------------------
-        -- Zoom in Menu --
-        1: Zoom in on specific time range
-        x: Return to previous menu
-        ---------------------------------------
-        
-        Enter your choice (1, x): 
-        '''
+---------------------------------------
+         -- Zoom in Menu --
+
+1: Zoom in on specific time range
+x: Return to main menu
+---------------------------------------
+
+Enter your choice (1, x): """)
 
         #print("2: Save plot to file")                   # -- Maybe later
 
@@ -732,25 +755,22 @@ def plot_time_series(time, x, y, z, function):
 
             while True:
                 
-                print("\n\n----------------------------------------------------------------------------------------------------------")
-                print("----------------------------------------------------------------------------------------------------------")
-
-                channel = input("\n\n---------------------------------------\nWhich channel(s) do you wish to look at?\n1: All three\n2: East\n3: North\n4: Z\n0: Reset plot limits\nx: Return to Zoom in Menu\n---------------------------------------\n\nEnter your choice (1-4, x): ")
-        
-                # This is what the menu will look like printed out
-                '''                
-                ---------------------------------------
-                Which channel(s) do you wish to look at?
-                1: All three
-                2: East
-                3: North
-                4: Z
-                0: Reset plot limits
-                x: Return to Zoom in Menu
-                ---------------------------------------
+                channel = input("""
                 
-                Enter your choice (1-4, x): 
-                '''
+----------------------------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------------
+
+---------------------------------------
+Which channel(s) do you wish to look at?
+1: All three
+2: East
+3: North
+4: Z
+0: Reset plot limits
+x: Return to Zoom in Menu
+---------------------------------------
+
+Enter your choice (1-4, x): """)
 
 ################################################################################################################################
 #------------------------------------------------------------------------------------------------------------------------------#
@@ -827,7 +847,7 @@ def plot_time_series(time, x, y, z, function):
 
 
 
-def plot_spectrum(time, sr, x, y, z, ligo_freq, ligo_sr, ligo_x, ligo_y, ligo_z, function):
+def plot_spectrum(time, sr, x, y, z, ligo_sr, ligo_x, ligo_y, ligo_z, function):
     print("Plotting Spectrum...")
     
 
@@ -839,7 +859,6 @@ def plot_spectrum(time, sr, x, y, z, ligo_freq, ligo_sr, ligo_x, ligo_y, ligo_z,
 #------------------------------------------------------------------------------------------------------------------------------#
 ################################################################################################################################
 
-    warnings.simplefilter('ignore')
     
     '''
     This the function that calculates the ASD spectra of the data acquired. A Power Specral Density (PSD) plot is calculated
@@ -851,7 +870,9 @@ def plot_spectrum(time, sr, x, y, z, ligo_freq, ligo_sr, ligo_x, ligo_y, ligo_z,
     function. However, for the magnetometer, we took data with our setup to ensure the sensitivity was the same. So, that means
     that an additional ASD has to be calculated for the control data. 
     '''
-    def asd(data_z, data_n, data_e, sample_rate, lf, lx, ly, lz, bart_sample_rate, bart_x, bart_y, bart_z, frequency,
+    
+    
+    def asd(data_z, data_n, data_e, sample_rate, ligo_sample_rate, ligo_x, ligo_y, ligo_z, ctrl_compare, frequency,
         over_lap, fft, signal_prom, ymin, ymax, xmin, xmax, func, channel):
     
 #------------------------------------------------------------------------------------------------------------------------------#
@@ -862,6 +883,7 @@ def plot_spectrum(time, sr, x, y, z, ligo_freq, ligo_sr, ligo_x, ligo_y, ligo_z,
         user wishes to look at +- 1. So, if the user wants to look at 60Hz, the range would be 59-61 Hz.
         '''
         
+        '''
         def peaks(signal_freq, signal_log, frequency, signal_prom):
                 tolerance = 1
 
@@ -876,21 +898,23 @@ def plot_spectrum(time, sr, x, y, z, ligo_freq, ligo_sr, ligo_x, ligo_y, ligo_z,
                     peak = np.where(mask)[0][peaks_local]
 
                 return peak
+        '''
 
 #------------------------------------------------------------------------------------------------------------------------------#
 
         def spectrum(data, sr):
             f, Pxx = signal.welch(data, sr, window = 'hamming',
-                                nperseg = sr * fft,
-                                noverlap = round(sr * (over_lap * 0.01)))
+                                nperseg  = int(sr * fft),
+                                noverlap = int(round(sr * (over_lap * 0.01) ) ) )
                                 
             return f, np.sqrt(Pxx)
 
 #------------------------------------------------------------------------------------------------------------------------------#
+#------------------------------------------------------------------------------------------------------------------------------#
         
         input_data = {'z': data_z,          ## Dictionary for direction and field data
-                    'n': data_n,
-                    'e': data_e}
+                      'n': data_n,
+                      'e': data_e}
 
         results = {}                        ## Dictionary for dirct and calculations
 
@@ -908,41 +932,55 @@ def plot_spectrum(time, sr, x, y, z, ligo_freq, ligo_sr, ligo_x, ligo_y, ligo_z,
             else: 
                 disp = None
 
-            peak_gquux = peaks(signal_f, log_amp, frequency, signal_prom)
+            #peak_gquux = peaks(signal_f, log_amp, frequency, signal_prom)
             
             results[key] = {'frequency': signal_f,
                             'amp': amp,
-                            'disp': disp,
-                            'peaks': peak_gquux}
+                            'disp': disp}
+                            #'peaks': peak_gquux}
 
-        ## ------------------------------------------------------------------------------------- ##
+#------------------------------------------------------------------------------------------------------------------------------#
+        if ctrl_compare == True:
 
-        if bart_sample_rate is not None:
+            ctrl_data = {'z': ligo_z,                ## Dictionary for direction and field data
+                        'n': ligo_y,
+                        'e': ligo_x}
+    
+            ctrl_results = {}                        ## Dictionary for direction and calculations
 
-            ref_data = {'x': bart_x, 'y': bart_y, 'z': bart_z}
-            ref_out = {}
-            
-            for key, data in ref_data.items():
-                if data is not None:
+            ## ------------------------------------------------------------------------------------- ##
 
-                    lf, amp = spectrum(data, bart_sample_rate)
-                    ref_out[key] = amp
-            
-            lx, ly, lz = ref_out.get('x'), ref_out.get('y'), ref_out.get('z')
+            for key, data in ctrl_data.items():
 
+                if data is None:
+                    continue
+
+                ctrl_signal_f, ctrl_amp = spectrum(data, ligo_sample_rate)
+                ctrl_log_amp = np.log(ctrl_amp)
+
+                if func == 'displacement':
+
+                    # FIX 4: Avoid division by zero at DC (signal_f[0] == 0); set that bin to NaN
+                    ctrl_disp = np.where(ctrl_signal_f > 0, ctrl_amp / (2 * np.pi * ctrl_signal_f), np.nan)
+                else:
+                    ctrl_disp = None
+
+
+
+                ctrl_results[key] = {'frequency':  ctrl_signal_f,
+                                    'amp':        ctrl_amp,
+                                    'disp':       ctrl_disp}
+
+        #print(ctrl_results)
         ## ----------------- Dictionaries for plotting depending on direction ------------------ ##
         
         color_map = {'z': 'black', 
-                    'n': 'red', 
-                    'e': 'blue'}
-
-        ctrl_map   = {'z': lz,
-                    'n': ly, 
-                    'e': lx}
+                     'n': 'red', 
+                     'e': 'blue'}
 
         title_map = {'z': drctn_title[2], 
-                    'n': drctn_title[1], 
-                    'e': drctn_title[0]}
+                     'n': drctn_title[1], 
+                     'e': drctn_title[0]}
         
         ## ------------------------------------------------------------------------------------- ##
             
@@ -953,13 +991,14 @@ def plot_spectrum(time, sr, x, y, z, ligo_freq, ligo_sr, ligo_x, ligo_y, ligo_z,
         else:
             ylabel = s_label
             title = s_title
-
-
+        
+        channel_map = {'east': 'e', 'north': 'n', 'zed': 'z'}
+ 
         if channel == 'all':
             channels_to_plot = ['z', 'n', 'e']
-
+    
         else:
-            channels_to_plot = [channel[0]]         ## 'zed' -> 'z', etc
+            channels_to_plot = [channel_map[channel]]
             title = title_map[channels_to_plot[0]]
 
         ## ------------------------------------------------------------------------------------- ##
@@ -978,20 +1017,33 @@ def plot_spectrum(time, sr, x, y, z, ligo_freq, ligo_sr, ligo_x, ligo_y, ligo_z,
                 continue
 
             if func == 'velocity':
-                y = results[ch]['amp'] 
-            else:
-                y = results[ch]['disp']
+                y_plot       = results[ch]['amp']
+
+                if ctrl_compare == True:
+                    ctrl_y_plot  = ctrl_results[ch]['amp']
                 
-            f = results[ch]['frequency']
-            peaks_gquux = results[ch]['peaks']
+
+            else:
+                y_plot       = results[ch]['disp']
+                
+                if ctrl_compare == True:
+                    ctrl_y_plot  = ctrl_results[ch]['disp']
+                
+            f_plot           = results[ch]['frequency']
+
+            if ctrl_compare == True:
+                ctrl_f_plot      = ctrl_results[ch]['frequency']
+            
+            #peaks_gquux = results[ch]['peaks']
             
             ## Field Data
-            plt.plot(f, y, color = color_map[ch], linewidth = 1.75, label = title_map[ch])
+            plt.plot(f_plot, y_plot, color = color_map[ch], linewidth = 1.75, label = title_map[ch])
             
             ## ctrl data
-            if ctrl_map[ch] is not None:
-                plt.plot(lf, ctrl_map[ch], color = 'dimgrey', linewidth = 2, alpha = 0.5, label = f'LIGO {title_map[ch]}')
+            if ctrl_compare == True:
+                plt.plot(ctrl_f_plot, ctrl_y_plot, color = 'grey', linewidth = 2, alpha = 0.5, label = f'LIGO {title_map[ch]}')
 
+            '''
             ## Signal peaks
             if len(f[peaks_gquux]) != 0:
                 plt.scatter(f[peaks_gquux], y[peaks_gquux], s = 100, color = 'limegreen', marker = 'x', linewidths = 2.5)
@@ -1000,8 +1052,9 @@ def plot_spectrum(time, sr, x, y, z, ligo_freq, ligo_sr, ligo_x, ligo_y, ligo_z,
                     print(f'{title_map[ch]}:\n{f[peaks_gquux][0]:.2f} Hz \nAmpl: {y[peaks_gquux][0]:.3e}\n')
             else:
                 print(f"No peaks in the {title_map[ch]}\n")
+            '''
 
-        ## ----------------------------------------------------------------------------------------------------------------- ##
+    ## ----------------------------------------------------------------------------------------------------------------- ##
 
         ax = plt.gca()
         plt.legend(loc = 'lower left', fontsize = 14.5, ncol = 2)
@@ -1034,8 +1087,11 @@ def plot_spectrum(time, sr, x, y, z, ligo_freq, ligo_sr, ligo_x, ligo_y, ligo_z,
         plt.tight_layout()
         plt.show()
 
+        
 
 ################################################################################################################################
+#------------------------------------------------------------------------------------------------------------------------------#
+#------------------------------------------------------------------------------------------------------------------------------#
 #------------------------------------------------------------------------------------------------------------------------------#
 ################################################################################################################################
 
@@ -1058,7 +1114,7 @@ def plot_spectrum(time, sr, x, y, z, ligo_freq, ligo_sr, ligo_x, ligo_y, ligo_z,
 
         ## Displacement Y Limits  [m/√Hz]:
         my_max = 10e-7;        my_max_p = 10e-7  
-        my_min = 10e-15;       my_min_p = 10e-15
+        my_min = 10e-12;       my_min_p = 10e-12
 
 
 
@@ -1107,13 +1163,13 @@ def plot_spectrum(time, sr, x, y, z, ligo_freq, ligo_sr, ligo_x, ligo_y, ligo_z,
 
 ################################################################################################################################
 #----------------------------------------------------- Plots Velocity ---------------------------------------------------------#
-    asd(z, y, x, sr, None, None, None, None, None, None, None, None, None,
+    asd(z, y, x, sr, None, None, None, None, False, None,
         overlap, fft_length, prom, y_min, y_max, x_min, x_max, "velocity", "all")
 
 
 #---------------------------------------------------- Plots Displacement ------------------------------------------------------#
     if function == "seis":
-        asd(z, y, x, sr, None, None, None, None, None, None, None, None, None,
+        asd(z, y, x, sr, None, None, None, None, False, None,
             overlap, fft_length, prom, my_min, my_max, x_min, x_max, "displacement", "all")
 
 
@@ -1139,30 +1195,23 @@ def plot_spectrum(time, sr, x, y, z, ligo_freq, ligo_sr, ligo_x, ligo_y, ligo_z,
     while True:
         # In Jupyter the place of the input line is not consistent. So, sometimes it is printed out before the option list.
         # To fix this, the option list was placed into the input line, so that everything is alway together.
+                
+        sub_choice = input("""
         
+----------------------------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------------
 
-        print("\n\n----------------------------------------------------------------------------------------------------------")
-        print("----------------------------------------------------------------------------------------------------------")
-        
-        sub_choice = input("\n\n---------------------------------------\n-- ASD Spectra Options --\n0: Reset plot / FFT Parameters\n1: Replot spectra\n2: Compare to LIGO Hanford Data\n3: Change plot limits / FFT Parameters\n4: Look at specific times in the time series\n5: Look at a specific frequency\nx: Return to main menu\n---------------------------------------\n\nEnter your choice (0-5, x): ")
-
-        '''
-        ----------------------------------------------------------------------------------------------------------
-        ----------------------------------------------------------------------------------------------------------
-        
-        ---------------------------------------
-        -- ASD Spectra Options --
-        0: Reset plot / FFT Parameters
-        1: Replot spectra
-        2: Compare to LIGO Hanford Data
-        3: Change plot limits / FFT Parameters
-        4: Look at specific times in the time series
-        5: Look at a specific frequency 
-        x: Return to main menu"
-        ---------------------------------------
-
-        Enter your choice (0-5, x): 
-        '''
+---------------------------------------
+-- ASD Spectra Options --
+0: Reset plot / FFT Parameters
+1: Replot spectra
+2: Compare to LIGO Hanford Data
+3: Change plot limits / FFT Parameters
+4: Look at specific times in the time series
+5: Look at a specific frequency
+x: Return to main menu
+---------------------------------------
+Enter your choice (0-5, x): """)
 
 ################################################################################################################################
 #------------------------------------------------------------------------------------------------------------------------------# 
@@ -1190,59 +1239,62 @@ def plot_spectrum(time, sr, x, y, z, ligo_freq, ligo_sr, ligo_x, ligo_y, ligo_z,
         elif sub_choice == "1":
 
             ## --------------------------------------- Plots Velocity -------------------------------------- ##
-            asd(z, y, x, sr, None, None, None, None, None, None, None, None, None,
+            asd(z, y, x, sr, None, None, None, None, False, None,
                 overlap, fft_length, prom, y_min, y_max, x_min, x_max, "velocity", "all")
 
 
             ## ------------------------------------- Plots Displacement ------------------------------------ ##
             if function == "seis":
-                asd(z, y, x, sr, None, None, None, None, None, None, None, None, None,
+                asd(z, y, x, sr, None, None, None, None, False, None,
                     overlap, fft_length, prom, my_min, my_max, x_min, x_max, "displacement", "all")
+
+
+################################################################################################################################
+#------------------------------------------------------------------------------------------------------------------------------# 
+
 
         elif sub_choice == "2":
             
             if function == "seis":
-            
-                ## ------------------------------------- E Channel ------------------------------------- ##  
-                if ligo_freq is not None:
-                    asd(None, None, x, sr, ligo_freq, ligo_x, ligo_y, ligo_z, None, None, None, None, None,
-                        overlap, fft_length, prom, y_min, y_max, x_min, x_max, "velocity", "east")
-
-                elif ligo_freq is None:
-                    print("LIGO data not found")
-
-                ## ------------------------------------- N Channel ------------------------------------- ##
-                if ligo_freq is not None:
-                    asd(None, y, None, sr, ligo_freq, ligo_x, ligo_y, ligo_z, None, None, None, None, None,
-                        overlap, fft_length, prom, y_min, y_max, x_min, x_max, "velocity", "north")
-
-                ## ------------------------------------- Z Channel ------------------------------------- ##
-                if ligo_freq is not None:
-                    asd(z, None, None, sr, ligo_freq, ligo_x, ligo_y, ligo_z, None, None, None, None, None,
-                        overlap, fft_length, prom, y_min, y_max, x_min, x_max, "velocity", "zed")
-                
-            elif function == "mag":
-                
-                ## ------------------------------------- E Channel ------------------------------------- ##
                 if ligo_sr is not None:
-                    asd(None, None, x, sr, None, None, None, None, ligo_sr, ligo_x, None, None, None,
-                        overlap, fft_length, prom, y_min, y_max, x_min, x_max, "velocity", "east")
+
+                    ## ------------------------------- E/X Channel ------------------------------- ##  
+                    asd(None, None, x, sr, ligo_sr, ligo_x, ligo_y, ligo_z, True, None,
+                        overlap, fft_length, prom, y_min, y_max, x_min, x_max, "displacement", "east")
+                    
+                    ## ------------------------------- N/Y Channel ------------------------------- ##
+                    asd(None, y, None, sr, ligo_sr, ligo_x, ligo_y, ligo_z, True, None,
+                        overlap, fft_length, prom, y_min, y_max, x_min, x_max, "displacement", "north")
+
+                    ## -------------------------------- Z Channel -------------------------------- ##
+                    asd(z, None, None, sr, ligo_sr, ligo_x, ligo_y, ligo_z, True, None,
+                        overlap, fft_length, prom, y_min, y_max, x_min, x_max, "displacement", "zed")
                     
                 elif ligo_sr is None:
                     print("LIGO data not found")
 
-                ## ------------------------------------- N Channel ------------------------------------- ##
+            else:
                 if ligo_sr is not None:
-                    asd(None, y, None, sr, None, None, None, None, ligo_sr, None, ligo_y, None, None,
+
+                    ## ------------------------------- E/X Channel ------------------------------- ##  
+                    asd(None, None, x, sr, ligo_sr, ligo_x, ligo_y, ligo_z, True, None,
+                        overlap, fft_length, prom, y_min, y_max, x_min, x_max, "velocity", "east")
+                    
+                    ## ------------------------------- N/Y Channel ------------------------------- ##
+                    asd(None, y, None, sr, ligo_sr, ligo_x, ligo_y, ligo_z, True, None,
                         overlap, fft_length, prom, y_min, y_max, x_min, x_max, "velocity", "north")
 
-                ## ------------------------------------- Z Channel ------------------------------------- ##
-                if ligo_sr is not None:
-                    asd(z, None, None, sr, None, None, None, None, ligo_sr, None, None, ligo_z, None,
+                    ## -------------------------------- Z Channel -------------------------------- ##
+                    asd(z, None, None, sr, ligo_sr, ligo_x, ligo_y, ligo_z, True, None,
                         overlap, fft_length, prom, y_min, y_max, x_min, x_max, "velocity", "zed")
+                    
+                elif ligo_sr is None:
+                    print("LIGO data not found")
         
+
 ################################################################################################################################
 #------------------------------------------------------------------------------------------------------------------------------#            
+
 
         elif sub_choice == "3":
 
@@ -1303,13 +1355,13 @@ def plot_spectrum(time, sr, x, y, z, ligo_freq, ligo_sr, ligo_x, ligo_y, ligo_z,
                 
 #----------------------------------------------------- Plots Velocity ---------------------------------------------------------#
     
-            asd(z, y, x, sr, None, None, None, None, None, None, None, None, None,
+            asd(z, y, x, sr, None, None, None, None, False, None,
                 overlap, fft_length, prom, y_min, y_max, x_min, x_max, "velocity", "all")
 
 
 #---------------------------------------------------- Plots Displacement ------------------------------------------------------#
             if function == "seis":
-                asd(z, y, x, sr, None, None, None, None, None, None, None, None, None,
+                asd(z, y, x, sr, None, None, None, None, False, None,
                     overlap, fft_length, prom, my_min, my_max, x_min, x_max, "displacement", "all")
 
 
@@ -1336,11 +1388,11 @@ def plot_spectrum(time, sr, x, y, z, ligo_freq, ligo_sr, ligo_x, ligo_y, ligo_z,
             y1 = y[start:end]
             x1 = x[start:end]
 
-            asd(z1, y1, x1, sr, None, None, None, None, None, None, None, None, None,
+            asd(z1, y1, x1, sr, None, None, None, None, False, None,
                 overlap, fft_length, prom, y_min, y_max, x_min, x_max, "velocity", "all")
             
             if function == "seis":
-                asd(z1, y1, x1, sr, None, None, None, None, None, None, None, None, None,
+                asd(z1, y1, x1, sr, None, None, None, None, False, None,
                     overlap, fft_length, prom, my_min, my_max, x_min, x_max, "displacement", "all")
 
 
@@ -1359,50 +1411,28 @@ def plot_spectrum(time, sr, x, y, z, ligo_freq, ligo_sr, ligo_x, ligo_y, ligo_z,
             freq_min = freq - 1
             freq_max = freq + 1
             
-            
-            if function == "seis":
-            
-                ## -------------------------------------- E Channel -------------------------------------- ##
-                if ligo_freq is not None:
-                    asd(None, None, x, sr, ligo_freq, ligo_x, ligo_y, ligo_z, None, None, None, None, freq,
-                        overlap, fft_length, prom, y_min, y_max, freq_min, freq_max, "velocity", "east")
-
-                elif ligo_freq is None:
-                    print("LIGO data not found")
-
-                ## -------------------------------------- N Channel -------------------------------------- ##
-                if ligo_freq is not None:
-                    asd(None, y, None, sr, ligo_freq, ligo_x, ligo_y, ligo_z, None, None, None, None, freq,
-                        overlap, fft_length, prom, y_min, y_max, freq_min, freq_max, "velocity", "north")
-
-                ## -------------------------------------- Z Channel -------------------------------------- ##
-                if ligo_freq is not None:
-                    asd(z, None, None, sr, ligo_freq, ligo_x, ligo_y, ligo_z, None, None, None, None, freq,
-                        overlap, fft_length, prom, y_min, y_max, freq_min, freq_max, "velocity", "zed")
-
-
             if function == "mag":
                 
-                fft_length_1 = 100 
+                fft_length = 100 
                 prom = 4.5
 
-                ## -------------------------------------- E Channel -------------------------------------- ##
-                if ligo_sr is not None:
-                    asd(None, None, x, sr, None, None, None, None, ligo_sr, ligo_x, None, None, freq,
-                        overlap, fft_length_1, prom, y_min, y_max, freq_min, freq_max, "velocity", "east")
-                    
-                elif ligo_sr is None:
-                    print("LIGO data not found")
+                
+            if ligo_sr is not None:
 
-                ## -------------------------------------- N Channel -------------------------------------- ##
-                if ligo_sr is not None:
-                    asd(None, y, None, sr, None, None, None, None, ligo_sr, None, ligo_y, None, freq,
-                        overlap, fft_length_1, prom, y_min, y_max, freq_min, freq_max, "velocity", "north")
+            ## -------------------------------------- E Channel -------------------------------------- ##
+                asd(None, None, x, sr, ligo_sr, ligo_x, ligo_y, ligo_z, True, freq,
+                    overlap, fft_length, prom, y_min, y_max, freq_min, freq_max, "velocity", "east")
+                
+            ## -------------------------------------- N Channel -------------------------------------- ##
+                asd(None, y, None, sr, ligo_sr, ligo_x, ligo_y, ligo_z, True, freq,
+                    overlap, fft_length, prom, y_min, y_max, freq_min, freq_max, "velocity", "north")
+                
+            ## -------------------------------------- Z Channel -------------------------------------- ##
+                asd(z, None, None, sr, ligo_sr, ligo_x, ligo_y, ligo_z, True, freq,
+                    overlap, fft_length, prom, y_min, y_max, freq_min, freq_max, "velocity", "zed")
 
-                ## -------------------------------------- Z Channel -------------------------------------- ##
-                if ligo_sr is not None:
-                    asd(z, None, None, sr, None, None, None, None, ligo_sr, None, None, ligo_z, freq,
-                        overlap, fft_length_1, prom, y_min, y_max, freq_min, freq_max, "velocity", "zed")
+            elif ligo_sr is None:
+                print("LIGO data not found")
                     
                 
 ################################################################################################################################
@@ -1476,7 +1506,7 @@ def plot_spectrogram(time, sr, x, y, z, function):
         x_max = None
         x_min = None
 
-        y_max = 2000;    y_max_p = 2000 ## In terms of frequency
+        y_max = 500;    y_max_p = 500 ## In terms of frequency
         y_min = 0;       y_min_p = 0
 
         ## fft length 
@@ -1485,6 +1515,7 @@ def plot_spectrogram(time, sr, x, y, z, function):
         ## Precent FFT Overlap
         overlap = 50;    overlap_p = 50 ## 50% fft overlap
 
+        
 ################################################################################################################################
 #------------------------------------------------------------------------------------------------------------------------------#
 #----------------------------# The spectrograms are calculated with signal.spectrogram from SciPy #----------------------------#
@@ -1493,10 +1524,10 @@ def plot_spectrogram(time, sr, x, y, z, function):
 
 
     def spectrogram(data, channel, sample_rate, over_lap, fft, c_min, c_max, ymin, ymax, xmin, xmax, function):
-        warnings.simplefilter('ignore')
 
-        f, t, Sxx = signal.spectrogram(data, sample_rate, window= 'hamming'
-                                          , nperseg=round(sample_rate * fft), noverlap= round(sample_rate *(over_lap *0.01)) )
+        f, t, Sxx = signal.spectrogram(data, sample_rate, window= 'hamming', 
+                                             nperseg = int(round(sample_rate * fft) ), 
+                                             noverlap = int(round(sample_rate *(over_lap *0.01)) ) )
 
 #------------------------------------------------------------------------------------------------------------------------------#
 
@@ -1572,21 +1603,22 @@ def plot_spectrogram(time, sr, x, y, z, function):
 
     
     while True:
-        print("\n\n----------------------------------------------------------------------------------------------------------")
-        print("----------------------------------------------------------------------------------------------------------")
 
-        '''
-        ---------------------------------------
-        -- Spectrogram Options --
-        0: Reset plot / FFT Parameters
-        1: Replot spectrogram
-        2: Replot one axis
-        3: Change plot limits / FFT Parameters
-        x: Return to main menu
-        ---------------------------------------
-        '''
+        sub_choice = input("""
+        
+----------------------------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------------
 
-        sub_choice = input("\n\n---------------------------------------\n-- Spectrogram Options --\n0: Reset plot / FFT Parameters\n1: Replot spectrogram\n2: Replot one axis\n3: Change plot limits / FFT Parameters\nx: Return to main menu\n---------------------------------------\n\nEnter your choice (0-3, x): ")
+---------------------------------------
+-- Spectrogram Options --
+0: Reset plot / FFT Parameters
+1: Replot spectrogram
+2: Replot one axis
+3: Change plot limits / FFT Parameters
+x: Return to main menu
+---------------------------------------
+
+Enter your choice (0-3, x): """)
         
 #------------------------------------------------------------------------------------------------------------------------------#            
 
@@ -1725,7 +1757,7 @@ def plot_spectrogram(time, sr, x, y, z, function):
 #------------------------------------------------------------------------------------------------------------------------------#
 
 
-        elif sub_choice == "x" or sub_choice == "" or sub_choice == "2":
+        elif sub_choice == "x" or sub_choice == "":
             print("\nReturning to main menu...")
             break
         else:
@@ -1747,16 +1779,19 @@ def plot_spectrogram(time, sr, x, y, z, function):
 
 def main_menu():
     while True:
-        print("\n\n----------------------------------------------------------------------------------------------------------")
-        print("----------------------------------------------------------------------------------------------------------")
+        print("""
+----------------------------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------------
         
-        print("\n-----------------------------------------------")
-        print("What Sensor Data Would You Like to Analysis?")
-        print("1: Magentometer")
-        print("2: Seismometer")
-        print("x: Exit")
-        print("\n*Exit for all menu's is 'x' or enter")
-        print("-----------------------------------------------")
+-----------------------------------------------
+What Sensor Data Would You Like to Analysis?
+        
+1: Magentometer
+2: Seismometer
+x: Exit
+        
+*Exit for all menu's is 'x' or enter
+-----------------------------------------------""")
         
         choice = input("\nEnter your choice (1-2, x): ").strip().lower()
         
@@ -1767,33 +1802,44 @@ def main_menu():
 
         if choice == "1":
             
+            pre_amp_on = input("\nWere the pre-amps on? (y or n)  ").strip().lower()
+
+            if pre_amp_on == "y" or "y":
+                pre_amp = True
+            else:
+                pre_amp = False
+
             function = "mag"
             
-            sr, time, x, y, z, ligo_x, ligo_y, ligo_z, ligo_sr = csv_upload(function)
+            sr, time, x, y, z, ligo_x, ligo_y, ligo_z, ligo_sr = csv_upload(function, pre_amp)
             
             while True:
-                print("\n\n----------------------------------------------------------------------------------------------------------")
-                print("----------------------------------------------------------------------------------------------------------")
-
-                print("\n\n-----------------------------------------------")
-                print("       === Magnetometer Analysis Menu ===\n")
-                print("1: Plot Time Series")
-                print("2: Plot FFT Spectrum")
-                print("3: Plot Spectrogram")
-                print("x: Return to sensor menu")
-                print("-----------------------------------------------")
+                print("""
+----------------------------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------------
+                
+-----------------------------------------------
+     === Magnetometer Analysis Menu ===
+                       
+         1: Plot Time Series
+         2: Plot FFT Spectrum
+         3: Plot Spectrogram
+         x: Return to sensor menu
+                       
+-----------------------------------------------""")
 
                 sub_choice = input("\nEnter your choice (1-3, x): ").strip().lower()
+                
 
                 if sub_choice == "1":
                     plot_time_series(time, x, y, z, function)
                     
                 elif sub_choice == "2":
                     if ligo_sr is None:
-                        plot_spectrum(time, sr, x, y, z, None, None, None, None, None, function)
+                        plot_spectrum(time, sr, x, y, z, None, None, None, None, function)
 
                     else:
-                        plot_spectrum(time, sr, x, y, z, None, ligo_sr, ligo_x, ligo_y, ligo_z, function)
+                        plot_spectrum(time, sr, x, y, z, ligo_sr, ligo_x, ligo_y, ligo_z, function)
                     
                 elif sub_choice == "3":
                     plot_spectrogram(time, sr, x, y, z, function)
@@ -1812,15 +1858,26 @@ def main_menu():
 
         elif choice == "2":
             while True:
-                print("\n\n----------------------------------------------------------------------------------------------------------")
-                print("----------------------------------------------------------------------------------------------------------")
 
-                print("\n\n-----------------------------------------------")
-                print("            === Seismometer Menu ===\n")
-                print("1: WebDAQ Analysis  (csv)  (Default)")
-                print("2: Minimus Analysis (mseed)")
-                print("x: Return to sensor menu")
-                print("-----------------------------------------------")
+                pre_amp_on = input("\nWere the pre-amps on? (y or n)  ").strip().lower()
+
+                if pre_amp_on == "y" or "y":
+                    pre_amp = True
+                else:
+                    pre_amp = False
+
+                print("""
+----------------------------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------------
+                
+-----------------------------------------------
+            === Seismometer Menu ===
+                           
+        1: WebDAQ Analysis  (csv)  (Default)
+        2: Minimus Analysis (mseed)
+        x: Return to sensor menu
+                
+-----------------------------------------------""")
                 
                 sub_choice = input("\nEnter your choice (1-2, x): ").strip().lower()
 
@@ -1828,20 +1885,22 @@ def main_menu():
                     
                     function = "seis"
                     #         e, n, z
-                    sr, time, x, y, z, ligo_x, ligo_y, ligo_z, ligo_freq = csv_upload(function)
+                    sr, time, x, y, z, ligo_x, ligo_y, ligo_z, ligo_sr = csv_upload(function, pre_amp)
                     
                     while True:
 
-                        print("\n\n----------------------------------------------------------------------------------------------------------")
-                        print("----------------------------------------------------------------------------------------------------------")
-
-                        print("\n\n-----------------------------------------------")
-                        print("       === Seismometer Main Menu ===\n")
-                        print("1: Plot Time Series")
-                        print("2: Plot FFT Spectrum")
-                        print("3: Plot Spectrogram")
-                        print("x: Return to Seismometer menu")
-                        print("-----------------------------------------------")
+                        print("""
+----------------------------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------------
+                        
+-----------------------------------------------
+        === Seismometer Main Menu ===
+                               
+        1: Plot Time Series
+        2: Plot FFT Spectrum
+        3: Plot Spectrogram
+        x: Return to Seismometer menu
+-----------------------------------------------""")
 
                         sub_choice = input("\nEnter your choice (1-3, x): ").strip().lower()
 
@@ -1849,11 +1908,11 @@ def main_menu():
                             plot_time_series(time, x, y, z, function)
 
                         elif sub_choice == "2":
-                            if ligo_freq is None:
+                            if ligo_sr is None:
                                 plot_spectrum(time, sr, x, y, z, None, None, None, None, function)
 
                             else:
-                                plot_spectrum(time, sr, x, y, z, ligo_freq, None, ligo_x, ligo_y, ligo_z, function)
+                                plot_spectrum(time, sr, x, y, z, ligo_sr, ligo_x, ligo_y, ligo_z, function)
 
                         elif sub_choice == "3":
                             plot_spectrogram(time, sr, x, y, z, function)
@@ -1882,16 +1941,17 @@ def main_menu():
 
                     while True:
                         
-                        print("\n\n----------------------------------------------------------------------------------------------------------")
-                        print("----------------------------------------------------------------------------------------------------------")
+                        print("""
+----------------------------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------------
 
-                        print("\n\n-----------------------------------------------")
-                        print("       === Seismometer Main Menu ===\n")
-                        print("1: Plot Time Series")
-                        print("2: Plot FFT Spectrum")
-                        print("3: Plot Spectrogram")
-                        print("x: Return to Seismometer menu")
-                        print("-----------------------------------------------")
+-----------------------------------------------
+        === Seismometer Main Menu ===
+        1: Plot Time Series
+        2: Plot FFT Spectrum
+        3: Plot Spectrogram
+        x: Return to Seismometer menu
+-----------------------------------------------""")
 
                         sub_choice = input("\nEnter your choice (1-3, x): ").strip().lower()
 
@@ -1900,12 +1960,11 @@ def main_menu():
 
                         elif sub_choice == "2":
                             function = "seis"
-                            if ligo_freq is None:
+                            if ligo_sr is None:
                                 plot_spectrum(time, sr, x, y, z, None, None, None, None, function)
-                                print("LIGO data not found")
 
                             else:
-                                plot_spectrum(time, sr, x, y, z, ligo_freq, None, ligo_x, ligo_y, ligo_z, function)
+                                plot_spectrum(time, sr, x, y, z, ligo_sr, ligo_x, ligo_y, ligo_z, function)
 
                         elif sub_choice == "3":
                             function = "seis"
@@ -1938,4 +1997,3 @@ def main_menu():
 
 if __name__ == "__main__":
     main_menu()
-
